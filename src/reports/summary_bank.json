@@ -1,7 +1,7 @@
 {
   "name": "bank",
   "file": "..\\data\\raw\\bank.csv",
-  "date": "2026-05-01T21:17:46.512242+00:00",
+  "date": "2026-05-02T15:19:09.777296+00:00",
   "shape": [
     41188,
     21
@@ -111,8 +111,8 @@
       }
     },
     "scale_warnings": [
-      "emp.var.rate",
-      "cons.price.idx"
+      "cons.price.idx",
+      "emp.var.rate"
     ]
   },
   "categorical": {

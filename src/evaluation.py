@@ -533,7 +533,8 @@ def compile_results(all_results: dict):
             test_data.append(row)
     
     df_test = pd.DataFrame(test_data)
-    test_path = REPORTS_DIR / 'baseline_test_results.csv'
+    test_path = PROJECT_ROOT / 'data' / 'results' / 'baseline_test_results.csv'
+    test_path.parent.mkdir(parents=True, exist_ok=True)   # <-- diese Zeile neu
     df_test.to_csv(test_path, index=False)
     logger.info(f"Test set results saved to {test_path}")
     print("\n" + "="*90)

@@ -57,3 +57,62 @@ Saved JSON summary to reports\summary_ecom.json
 telco: ['Scale numerical features (StandardScaler/RobustScaler)', 'Imputation required; investigate placeholders and missingness', 'Duplicates present; consider removing duplicates']
 bank: ['Target is imbalanced; consider class weighting or resampling', 'Scale numerical features (StandardScaler/RobustScaler)', 'Imputation required; investigate placeholders and missingness', 'Duplicates present; consider removing duplicates']
 ecom: ['Target is imbalanced; consider class weighting or resampling', 'Imputation required; investigate placeholders and missingness', 'Duplicates present; consider removing duplicates']
+EDA run at 2026-05-02T15:19:08.150926+00:00
+Processing dataset: telco
+
+=== ANALYSIS: telco ===
+Shape: (7043, 20)
+Dtypes: {'gender': 'str', 'SeniorCitizen': 'int64', 'Partner': 'str', 'Dependents': 'str', 'tenure': 'int64', 'PhoneService': 'str', 'MultipleLines': 'str', 'InternetService': 'str', 'OnlineSecurity': 'str', 'OnlineBackup': 'str', 'DeviceProtection': 'str', 'TechSupport': 'str', 'StreamingTV': 'str', 'StreamingMovies': 'str', 'Contract': 'str', 'PaperlessBilling': 'str', 'PaymentMethod': 'str', 'MonthlyCharges': 'float64', 'TotalCharges': 'float64', 'Churn': 'str'}
+Memory usage (bytes): 6406592
+Missing summary: {'TotalCharges': {'missing': 11, 'pct': 0.156}}
+Placeholder suspects: {}
+Target distribution: {'No': {'count': 5174, 'pct': 73.463}, 'Yes': {'count': 1869, 'pct': 26.537}}
+Numerical constants: []
+Numerical outliers (sample): [('SeniorCitizen', {'count': 1142, 'low': 0.0, 'high': 0.0})]
+Scale warnings: ['TotalCharges']
+Categorical high-cardinality: []
+Correlation info: top pos/neg keys: ['tenure', 'TotalCharges', 'SeniorCitizen', 'MonthlyCharges'] / ['tenure', 'TotalCharges', 'SeniorCitizen', 'MonthlyCharges']
+Duplicates: {'duplicates': 22, 'duplicates_pct': 0.312}
+Quality issues: {'leading_trailing_spaces': {}, 'numeric_coercion_issues': {'gender': 7043, 'Partner': 7043, 'Dependents': 7043, 'PhoneService': 7043, 'MultipleLines': 7043, 'InternetService': 7043, 'OnlineSecurity': 7043, 'OnlineBackup': 7043, 'DeviceProtection': 7043, 'TechSupport': 7043, 'StreamingTV': 7043, 'StreamingMovies': 7043, 'Contract': 7043, 'PaperlessBilling': 7043, 'PaymentMethod': 7043}, 'possible_id_columns': []}
+Saved JSON summary to reports\summary_telco.json
+Processing dataset: bank
+
+=== ANALYSIS: bank ===
+Shape: (41188, 21)
+Dtypes: {'age': 'int64', 'job': 'str', 'marital': 'str', 'education': 'str', 'default': 'str', 'housing': 'str', 'loan': 'str', 'contact': 'str', 'month': 'str', 'day_of_week': 'str', 'duration': 'int64', 'campaign': 'int64', 'pdays': 'int64', 'previous': 'int64', 'poutcome': 'str', 'emp.var.rate': 'float64', 'cons.price.idx': 'float64', 'cons.conf.idx': 'float64', 'euribor3m': 'float64', 'nr.employed': 'float64', 'y': 'str'}
+Memory usage (bytes): 28106351
+Missing summary: {}
+Placeholder suspects: {'job': {'unknown': 330}, 'marital': {'unknown': 80}, 'education': {'unknown': 1731}, 'default': {'unknown': 8597}, 'housing': {'unknown': 990}, 'loan': {'unknown': 990}, 'poutcome': {'nonexistent': 35563}, 'duration': {'999': 2}, 'pdays': {'999': 39673}}
+Target distribution: {'no': {'count': 36548, 'pct': 88.735}, 'yes': {'count': 4640, 'pct': 11.265}}
+Warning: A class has less than 20% representation.
+Numerical constants: []
+Numerical outliers (sample): [('age', {'count': 469, 'low': 9.5, 'high': 69.5}), ('duration', {'count': 2963, 'low': -223.5, 'high': 644.5}), ('campaign', {'count': 2406, 'low': -2.0, 'high': 6.0}), ('pdays', {'count': 1515, 'low': 999.0, 'high': 999.0}), ('previous', {'count': 5625, 'low': 0.0, 'high': 0.0})]
+Scale warnings: ['cons.price.idx', 'emp.var.rate']
+Categorical high-cardinality: []
+Correlation info: top pos/neg keys: ['campaign', 'age', 'cons.conf.idx', 'previous', 'duration'] / ['nr.employed', 'pdays', 'euribor3m', 'emp.var.rate', 'cons.price.idx']
+Duplicates: {'duplicates': 12, 'duplicates_pct': 0.029}
+Quality issues: {'leading_trailing_spaces': {}, 'numeric_coercion_issues': {'job': 41188, 'marital': 41188, 'education': 41188, 'default': 41188, 'housing': 41188, 'loan': 41188, 'contact': 41188, 'month': 41188, 'day_of_week': 41188, 'poutcome': 41188}, 'possible_id_columns': []}
+Saved JSON summary to reports\summary_bank.json
+Processing dataset: ecom
+
+=== ANALYSIS: ecom ===
+Shape: (12330, 18)
+Dtypes: {'Administrative': 'int64', 'Administrative_Duration': 'float64', 'Informational': 'int64', 'Informational_Duration': 'float64', 'ProductRelated': 'int64', 'ProductRelated_Duration': 'float64', 'BounceRates': 'float64', 'ExitRates': 'float64', 'PageValues': 'float64', 'SpecialDay': 'float64', 'Month': 'str', 'OperatingSystems': 'int64', 'Browser': 'int64', 'Region': 'int64', 'TrafficType': 'int64', 'VisitorType': 'str', 'Weekend': 'bool', 'Revenue': 'bool'}
+Memory usage (bytes): 2849796
+Missing summary: {}
+Placeholder suspects: {'ProductRelated_Duration': {'999': 3}}
+Target distribution: {'False': {'count': 10422, 'pct': 84.526}, 'True': {'count': 1908, 'pct': 15.474}}
+Warning: A class has less than 20% representation.
+Numerical constants: []
+Numerical outliers (sample): [('Administrative', {'count': 404, 'low': -6.0, 'high': 10.0}), ('Administrative_Duration', {'count': 1172, 'low': -139.88437499999998, 'high': 233.14062499999997}), ('Informational', {'count': 2631, 'low': 0.0, 'high': 0.0}), ('Informational_Duration', {'count': 2405, 'low': 0.0, 'high': 0.0}), ('ProductRelated', {'count': 987, 'low': -39.5, 'high': 84.5})]
+Scale warnings: []
+Categorical high-cardinality: []
+Correlation info: top pos/neg keys: ['Informational', 'Administrative', 'ProductRelated_Duration', 'ProductRelated', 'PageValues'] / ['ExitRates', 'BounceRates', 'SpecialDay', 'OperatingSystems', 'Region']
+Duplicates: {'duplicates': 125, 'duplicates_pct': 1.014}
+Quality issues: {'leading_trailing_spaces': {}, 'numeric_coercion_issues': {'Month': 12330, 'VisitorType': 12330}, 'possible_id_columns': []}
+Saved JSON summary to reports\summary_ecom.json
+
+=== SUMMARY RECOMMENDATIONS ===
+telco: ['Scale numerical features (StandardScaler/RobustScaler)', 'Imputation required; investigate placeholders and missingness', 'Duplicates present; consider removing duplicates']
+bank: ['Target is imbalanced; consider class weighting or resampling', 'Scale numerical features (StandardScaler/RobustScaler)', 'Imputation required; investigate placeholders and missingness', 'Duplicates present; consider removing duplicates']
+ecom: ['Target is imbalanced; consider class weighting or resampling', 'Imputation required; investigate placeholders and missingness', 'Duplicates present; consider removing duplicates']
