@@ -219,3 +219,6 @@ __marimo__/
 
 # Data folder
 /data*
+
+# My Todos
+my_todo.md

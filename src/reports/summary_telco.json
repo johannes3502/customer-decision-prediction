@@ -1,0 +1,112 @@
+{
+  "name": "telco",
+  "file": "..\\data\\raw\\telco.csv",
+  "date": "2026-05-01T21:17:45.719884+00:00",
+  "shape": [
+    7043,
+    20
+  ],
+  "dtypes": {
+    "gender": "str",
+    "SeniorCitizen": "int64",
+    "Partner": "str",
+    "Dependents": "str",
+    "tenure": "int64",
+    "PhoneService": "str",
+    "MultipleLines": "str",
+    "InternetService": "str",
+    "OnlineSecurity": "str",
+    "OnlineBackup": "str",
+    "DeviceProtection": "str",
+    "TechSupport": "str",
+    "StreamingTV": "str",
+    "StreamingMovies": "str",
+    "Contract": "str",
+    "PaperlessBilling": "str",
+    "PaymentMethod": "str",
+    "MonthlyCharges": "float64",
+    "TotalCharges": "float64",
+    "Churn": "str"
+  },
+  "memory_bytes": 6406592,
+  "missing": {
+    "missing_columns": {
+      "TotalCharges": {
+        "missing": 11,
+        "pct": 0.156
+      }
+    },
+    "placeholder_suspects": {},
+    "total_missing": 11
+  },
+  "imbalance_warning": false,
+  "target": {
+    "distribution": {
+      "No": {
+        "count": 5174,
+        "pct": 73.463
+      },
+      "Yes": {
+        "count": 1869,
+        "pct": 26.537
+      }
+    }
+  },
+  "numerical": {
+    "constants": [],
+    "outliers": {
+      "SeniorCitizen": {
+        "count": 1142,
+        "low": 0.0,
+        "high": 0.0
+      }
+    },
+    "scale_warnings": [
+      "TotalCharges"
+    ]
+  },
+  "categorical": {
+    "high_cardinality": []
+  },
+  "correlations": {
+    "top_positive_with_target": {
+      "tenure": -0.35222867011307885,
+      "TotalCharges": -0.199484083567564,
+      "SeniorCitizen": 0.15088932817647233,
+      "MonthlyCharges": 0.19335642223784716
+    },
+    "top_negative_with_target": {
+      "tenure": -0.35222867011307885,
+      "TotalCharges": -0.199484083567564,
+      "SeniorCitizen": 0.15088932817647233,
+      "MonthlyCharges": 0.19335642223784716
+    },
+    "strong_pairs": []
+  },
+  "duplicates": {
+    "duplicates": 22,
+    "duplicates_pct": 0.312
+  },
+  "quality": {
+    "leading_trailing_spaces": {},
+    "numeric_coercion_issues": {
+      "gender": 7043,
+      "Partner": 7043,
+      "Dependents": 7043,
+      "PhoneService": 7043,
+      "MultipleLines": 7043,
+      "InternetService": 7043,
+      "OnlineSecurity": 7043,
+      "OnlineBackup": 7043,
+      "DeviceProtection": 7043,
+      "TechSupport": 7043,
+      "StreamingTV": 7043,
+      "StreamingMovies": 7043,
+      "Contract": 7043,
+      "PaperlessBilling": 7043,
+      "PaymentMethod": 7043
+    },
+    "possible_id_columns": []
+  },
+  "outlier_rows_count": 1142
+}

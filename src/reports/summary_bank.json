@@ -1,0 +1,181 @@
+{
+  "name": "bank",
+  "file": "..\\data\\raw\\bank.csv",
+  "date": "2026-05-01T21:17:46.512242+00:00",
+  "shape": [
+    41188,
+    21
+  ],
+  "dtypes": {
+    "age": "int64",
+    "job": "str",
+    "marital": "str",
+    "education": "str",
+    "default": "str",
+    "housing": "str",
+    "loan": "str",
+    "contact": "str",
+    "month": "str",
+    "day_of_week": "str",
+    "duration": "int64",
+    "campaign": "int64",
+    "pdays": "int64",
+    "previous": "int64",
+    "poutcome": "str",
+    "emp.var.rate": "float64",
+    "cons.price.idx": "float64",
+    "cons.conf.idx": "float64",
+    "euribor3m": "float64",
+    "nr.employed": "float64",
+    "y": "str"
+  },
+  "memory_bytes": 28106351,
+  "missing": {
+    "missing_columns": {},
+    "placeholder_suspects": {
+      "job": {
+        "unknown": 330
+      },
+      "marital": {
+        "unknown": 80
+      },
+      "education": {
+        "unknown": 1731
+      },
+      "default": {
+        "unknown": 8597
+      },
+      "housing": {
+        "unknown": 990
+      },
+      "loan": {
+        "unknown": 990
+      },
+      "poutcome": {
+        "nonexistent": 35563
+      },
+      "duration": {
+        "999": 2
+      },
+      "pdays": {
+        "999": 39673
+      }
+    },
+    "total_missing": 0
+  },
+  "imbalance_warning": true,
+  "target": {
+    "distribution": {
+      "no": {
+        "count": 36548,
+        "pct": 88.735
+      },
+      "yes": {
+        "count": 4640,
+        "pct": 11.265
+      }
+    }
+  },
+  "numerical": {
+    "constants": [],
+    "outliers": {
+      "age": {
+        "count": 469,
+        "low": 9.5,
+        "high": 69.5
+      },
+      "duration": {
+        "count": 2963,
+        "low": -223.5,
+        "high": 644.5
+      },
+      "campaign": {
+        "count": 2406,
+        "low": -2.0,
+        "high": 6.0
+      },
+      "pdays": {
+        "count": 1515,
+        "low": 999.0,
+        "high": 999.0
+      },
+      "previous": {
+        "count": 5625,
+        "low": 0.0,
+        "high": 0.0
+      },
+      "cons.conf.idx": {
+        "count": 447,
+        "low": -52.150000000000006,
+        "high": -26.949999999999992
+      }
+    },
+    "scale_warnings": [
+      "emp.var.rate",
+      "cons.price.idx"
+    ]
+  },
+  "categorical": {
+    "high_cardinality": []
+  },
+  "correlations": {
+    "top_positive_with_target": {
+      "campaign": -0.06635741475467098,
+      "age": 0.03039880304000472,
+      "cons.conf.idx": 0.054877946053185876,
+      "previous": 0.23018100321659038,
+      "duration": 0.4052738006793158
+    },
+    "top_negative_with_target": {
+      "nr.employed": -0.35467829592142025,
+      "pdays": -0.3249144776166296,
+      "euribor3m": -0.30777140394072083,
+      "emp.var.rate": -0.2983344261593771,
+      "cons.price.idx": -0.13621121281923163
+    },
+    "strong_pairs": [
+      {
+        "pair": [
+          "emp.var.rate",
+          "euribor3m"
+        ],
+        "r": 0.9722446711516167
+      },
+      {
+        "pair": [
+          "emp.var.rate",
+          "nr.employed"
+        ],
+        "r": 0.9069701012560616
+      },
+      {
+        "pair": [
+          "euribor3m",
+          "nr.employed"
+        ],
+        "r": 0.9451544313982757
+      }
+    ]
+  },
+  "duplicates": {
+    "duplicates": 12,
+    "duplicates_pct": 0.029
+  },
+  "quality": {
+    "leading_trailing_spaces": {},
+    "numeric_coercion_issues": {
+      "job": 41188,
+      "marital": 41188,
+      "education": 41188,
+      "default": 41188,
+      "housing": 41188,
+      "loan": 41188,
+      "contact": 41188,
+      "month": 41188,
+      "day_of_week": 41188,
+      "poutcome": 41188
+    },
+    "possible_id_columns": []
+  },
+  "outlier_rows_count": 10828
+}

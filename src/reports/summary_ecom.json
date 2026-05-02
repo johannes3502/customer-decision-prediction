@@ -1,0 +1,169 @@
+{
+  "name": "ecom",
+  "file": "..\\data\\raw\\ecom.csv",
+  "date": "2026-05-01T21:17:48.509043+00:00",
+  "shape": [
+    12330,
+    18
+  ],
+  "dtypes": {
+    "Administrative": "int64",
+    "Administrative_Duration": "float64",
+    "Informational": "int64",
+    "Informational_Duration": "float64",
+    "ProductRelated": "int64",
+    "ProductRelated_Duration": "float64",
+    "BounceRates": "float64",
+    "ExitRates": "float64",
+    "PageValues": "float64",
+    "SpecialDay": "float64",
+    "Month": "str",
+    "OperatingSystems": "int64",
+    "Browser": "int64",
+    "Region": "int64",
+    "TrafficType": "int64",
+    "VisitorType": "str",
+    "Weekend": "bool",
+    "Revenue": "bool"
+  },
+  "memory_bytes": 2849796,
+  "missing": {
+    "missing_columns": {},
+    "placeholder_suspects": {
+      "ProductRelated_Duration": {
+        "999": 3
+      }
+    },
+    "total_missing": 0
+  },
+  "imbalance_warning": true,
+  "target": {
+    "distribution": {
+      "False": {
+        "count": 10422,
+        "pct": 84.526
+      },
+      "True": {
+        "count": 1908,
+        "pct": 15.474
+      }
+    }
+  },
+  "numerical": {
+    "constants": [],
+    "outliers": {
+      "Administrative": {
+        "count": 404,
+        "low": -6.0,
+        "high": 10.0
+      },
+      "Administrative_Duration": {
+        "count": 1172,
+        "low": -139.88437499999998,
+        "high": 233.14062499999997
+      },
+      "Informational": {
+        "count": 2631,
+        "low": 0.0,
+        "high": 0.0
+      },
+      "Informational_Duration": {
+        "count": 2405,
+        "low": 0.0,
+        "high": 0.0
+      },
+      "ProductRelated": {
+        "count": 987,
+        "low": -39.5,
+        "high": 84.5
+      },
+      "ProductRelated_Duration": {
+        "count": 961,
+        "low": -1735.8920702500002,
+        "high": 3384.1867837500004
+      },
+      "BounceRates": {
+        "count": 1551,
+        "low": -0.025218837749999997,
+        "high": 0.04203139624999999
+      },
+      "ExitRates": {
+        "count": 1099,
+        "low": -0.039285715000000006,
+        "high": 0.103571429
+      },
+      "PageValues": {
+        "count": 2730,
+        "low": 0.0,
+        "high": 0.0
+      },
+      "SpecialDay": {
+        "count": 1251,
+        "low": 0.0,
+        "high": 0.0
+      },
+      "OperatingSystems": {
+        "count": 111,
+        "low": 0.5,
+        "high": 4.5
+      },
+      "Browser": {
+        "count": 4369,
+        "low": 2.0,
+        "high": 2.0
+      },
+      "Region": {
+        "count": 511,
+        "low": -3.5,
+        "high": 8.5
+      },
+      "TrafficType": {
+        "count": 2101,
+        "low": -1.0,
+        "high": 7.0
+      }
+    },
+    "scale_warnings": []
+  },
+  "categorical": {
+    "high_cardinality": []
+  },
+  "correlations": {
+    "top_positive_with_target": {
+      "Informational": 0.0952003425720571,
+      "Administrative": 0.13891709415067252,
+      "ProductRelated_Duration": 0.15237261055701054,
+      "ProductRelated": 0.1585379842808741,
+      "PageValues": 0.49256929525120574
+    },
+    "top_negative_with_target": {
+      "ExitRates": -0.2070710820552722,
+      "BounceRates": -0.1506729119260533,
+      "SpecialDay": -0.08230459817953152,
+      "OperatingSystems": -0.01466755959421009,
+      "Region": -0.01159506777780069
+    },
+    "strong_pairs": [
+      {
+        "pair": [
+          "BounceRates",
+          "ExitRates"
+        ],
+        "r": 0.9130043961815185
+      }
+    ]
+  },
+  "duplicates": {
+    "duplicates": 125,
+    "duplicates_pct": 1.014
+  },
+  "quality": {
+    "leading_trailing_spaces": {},
+    "numeric_coercion_issues": {
+      "Month": 12330,
+      "VisitorType": 12330
+    },
+    "possible_id_columns": []
+  },
+  "outlier_rows_count": 9780
+}
