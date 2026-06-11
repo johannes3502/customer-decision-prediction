@@ -23,8 +23,8 @@ from utils.preprocess import preprocess_data
 def main():
 	"""Download raw datasets, apply preprocessing, and save clean versions."""
 	ensure_directories()
-	raw_dir = Path('../data/raw')
-	processed_dir = Path('../data/processed')
+	raw_dir = Path(__file__).parent.parent / 'data' / 'raw'
+	processed_dir = Path(__file__).parent.parent / 'data' / 'processed'
 	processed_dir.mkdir(parents=True, exist_ok=True)
 
 	# Download phase

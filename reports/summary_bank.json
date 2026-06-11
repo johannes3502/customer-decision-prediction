@@ -1,7 +1,7 @@
 {
   "name": "bank",
-  "file": "..\\data\\raw\\bank.csv",
-  "date": "2026-05-02T15:19:09.777296+00:00",
+  "file": "C:\\Users\\Johannes\\uni\\sose26\\machine-learning\\data\\raw\\bank.csv",
+  "date": "2026-06-09T19:58:50.971690+00:00",
   "shape": [
     41188,
     21
@@ -111,8 +111,8 @@
       }
     },
     "scale_warnings": [
-      "cons.price.idx",
-      "emp.var.rate"
+      "emp.var.rate",
+      "cons.price.idx"
     ]
   },
   "categorical": {

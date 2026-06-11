@@ -1,7 +1,7 @@
 """Exploratory Data Analysis (EDA) for project datasets.
 
 This script analyzes three datasets (Telco, Bank, E-Commerce) and writes
-text reports, JSON summaries and correlation heatmaps into `reports/`.
+text reports, JSON summaries and correlation heatmaps into reports/.
 
 Usage: python src/analysis.py
 """
@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-REPORT_DIR = Path("reports")
+REPORT_DIR = Path(__file__).parent.parent / "reports"
 PLOTS_DIR = REPORT_DIR / "plots"
 REPORT_FILE = REPORT_DIR / "eda_report.txt"
 
@@ -442,9 +442,9 @@ def main():
 
     # configuration for datasets
     configs = [
-        {"name": "telco", "file": Path("../data/raw/telco.csv"), "sep": ",", "target": "Churn", "id_col": "customerID"},
-        {"name": "bank", "file": Path("../data/raw/bank.csv"), "sep": ";", "target": "y", "id_col": None},
-        {"name": "ecom", "file": Path("../data/raw/ecom.csv"), "sep": ",", "target": "Revenue", "id_col": None},
+        {"name": "telco", "file": Path(__file__).parent.parent / "data" / "raw" / "telco.csv", "sep": ",", "target": "Churn", "id_col": "customerID"},
+        {"name": "bank", "file": Path(__file__).parent.parent / "data" / "raw" / "bank.csv", "sep": ";", "target": "y", "id_col": None},
+        {"name": "ecom", "file": Path(__file__).parent.parent / "data" / "raw" / "ecom.csv", "sep": ",", "target": "Revenue", "id_col": None},
     ]
 
     summary_overall: Dict[str, Any] = {}

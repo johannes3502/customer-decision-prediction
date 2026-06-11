@@ -1,7 +1,7 @@
 {
   "name": "telco",
-  "file": "..\\data\\raw\\telco.csv",
-  "date": "2026-05-02T15:19:08.151324+00:00",
+  "file": "C:\\Users\\Johannes\\uni\\sose26\\machine-learning\\data\\raw\\telco.csv",
+  "date": "2026-06-09T19:58:49.591589+00:00",
   "shape": [
     7043,
     20

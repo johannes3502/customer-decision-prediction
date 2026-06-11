@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 # Paths (script is executed from src/ directory)
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
-REPORTS_DIR = PROJECT_ROOT / "src" / "reports"
+REPORTS_DIR = PROJECT_ROOT / "reports"
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Dataset configuration
@@ -505,7 +505,7 @@ def compile_results(all_results: dict):
             cv_data.append(row)
     
     df_cv = pd.DataFrame(cv_data)
-    cv_path = PROJECT_ROOT / 'data' / 'results' / 'baseline_cv_results.csv'
+    cv_path = PROJECT_ROOT / 'reports' / 'results' / 'baseline_cv_results.csv'
     cv_path.parent.mkdir(parents=True, exist_ok=True)   # <-- diese Zeile neu
     df_cv.to_csv(cv_path, index=False)
     logger.info(f"\nCross-validation results saved to {cv_path}")
@@ -533,7 +533,7 @@ def compile_results(all_results: dict):
             test_data.append(row)
     
     df_test = pd.DataFrame(test_data)
-    test_path = PROJECT_ROOT / 'data' / 'results' / 'baseline_test_results.csv'
+    test_path = PROJECT_ROOT / 'reports' / 'results' / 'baseline_test_results.csv'
     test_path.parent.mkdir(parents=True, exist_ok=True)   # <-- diese Zeile neu
     df_test.to_csv(test_path, index=False)
     logger.info(f"Test set results saved to {test_path}")

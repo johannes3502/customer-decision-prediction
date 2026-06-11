@@ -223,8 +223,7 @@ __marimo__/
 # Kilo
 .kilo/
 
-# My Todos
-my_todo.md
-task4_todo.md
-todo_heute.md
-audit_heute.md
+# Internal audit / cleanup checklists
+.audit/
+
+vorlesung

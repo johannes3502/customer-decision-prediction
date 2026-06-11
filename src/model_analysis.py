@@ -6,7 +6,7 @@ learning curves, confusion matrix analysis, hyperparameter sensitivity, and
 error pattern analysis.
 
 All functions accept sklearn Pipeline objects (ColumnTransformer + Classifier)
-and numpy/pandas data arrays. Plot functions save to src/reports/plots/.
+and numpy/pandas data arrays. Plot functions save to reports/plots/.
 
 Usage: from src.model_analysis import compute_permutation_importance, ...
 """
@@ -31,7 +31,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).parent.parent
-REPORTS_DIR = PROJECT_ROOT / "src" / "reports"
+REPORTS_DIR = PROJECT_ROOT / "reports"
 PLOTS_DIR = REPORTS_DIR / "plots"
 PLOTS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -134,7 +134,7 @@ def plot_permutation_importance(importance_df, dataset_name, model_name,
     ax.set_title(f'Permutation Importance – {model_name}\n{dataset_name}', fontsize=13)
     plt.tight_layout()
     if save:
-        path = PLOTS_DIR / f'task4_permutation_imp_{dataset_name}_{model_name.replace(" ", "_").lower()}.png'
+        path = PLOTS_DIR / f'permutation_imp_{dataset_name}_{model_name.replace(" ", "_").lower()}.png'
         fig.savefig(path, dpi=150, bbox_inches='tight')
         logger.info(f"Saved permutation importance plot to {path}")
     plt.show()
@@ -243,15 +243,15 @@ def plot_shap_summary(shap_values, X_trans, feature_names, dataset_name,
     fig.suptitle(f'SHAP Summary – {model_name}\n{dataset_name}', fontsize=13)
     plt.tight_layout()
     if save:
-        path = PLOTS_DIR / f'task4_shap_summary_{dataset_name}_{model_name.replace(" ", "_").lower()}.png'
+        path = PLOTS_DIR / f'shap_summary_{dataset_name}_{model_name.replace(" ", "_").lower()}.png'
         fig.savefig(path, dpi=150, bbox_inches='tight')
         logger.info(f"Saved SHAP summary plot to {path}")
     plt.show()
 
 
 def plot_shap_dependence(shap_values, X_trans, feature_names, target_feature,
-                         dataset_name, model_name, interaction_feature=None,
-                         save=True):
+                          dataset_name, model_name, interaction_feature=None,
+                          save=True, display_name=None):
     """Plot SHAP dependence plot for a single feature.
 
     Args:
@@ -263,6 +263,7 @@ def plot_shap_dependence(shap_values, X_trans, feature_names, target_feature,
         model_name: Model name.
         interaction_feature: Optional interaction feature name/index for coloring.
         save: If True, save to PLOTS_DIR.
+        display_name: Optional display name for the feature (uses encoded name if None).
     """
     try:
         import shap
@@ -297,12 +298,12 @@ def plot_shap_dependence(shap_values, X_trans, feature_names, target_feature,
         show=False,
     )
     fig = plt.gcf()
-    feat_display = feature_names[feature_idx] if feature_idx < len(feature_names) else str(feature_idx)
+    feat_display = display_name if display_name else (feature_names[feature_idx] if feature_idx < len(feature_names) else str(feature_idx))
     fig.suptitle(f'SHAP Dependence: {feat_display} – {model_name}\n{dataset_name}', fontsize=13)
     plt.tight_layout()
     if save:
         safe_feat = str(feat_display).replace('/', '_').replace(' ', '_')[:50]
-        path = PLOTS_DIR / f'task4_shap_dep_{dataset_name}_{safe_feat}_{model_name.replace(" ", "_").lower()}.png'
+        path = PLOTS_DIR / f'shap_dep_{dataset_name}_{safe_feat}_{model_name.replace(" ", "_").lower()}.png'
         fig.savefig(path, dpi=150, bbox_inches='tight')
         logger.info(f"Saved SHAP dependence plot to {path}")
     plt.show()
@@ -378,7 +379,7 @@ def plot_learning_curve(train_sizes, train_mean, train_std, val_mean, val_std,
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
     if save:
-        path = PLOTS_DIR / f'task4_learning_curve_{dataset_name}_{model_name.replace(" ", "_").lower()}.png'
+        path = PLOTS_DIR / f'learning_curve_{dataset_name}_{model_name.replace(" ", "_").lower()}.png'
         fig.savefig(path, dpi=150, bbox_inches='tight')
         logger.info(f"Saved learning curve to {path}")
     plt.show()
@@ -463,7 +464,7 @@ def plot_confusion_matrix(cm, dataset_name, model_name, save=True):
     fig.suptitle(f'Confusion Matrix – {dataset_name}', fontsize=14, y=1.02)
     plt.tight_layout()
     if save:
-        path = PLOTS_DIR / f'task4_confusion_{dataset_name}_{model_name.replace(" ", "_").lower()}.png'
+        path = PLOTS_DIR / f'confusion_{dataset_name}_{model_name.replace(" ", "_").lower()}.png'
         fig.savefig(path, dpi=150, bbox_inches='tight')
         logger.info(f"Saved confusion matrix plot to {path}")
     plt.show()
@@ -557,7 +558,7 @@ def plot_misclassification_diff(diff_df, dataset_name, model_name, top_n=10, sav
     ax.legend()
     plt.tight_layout()
     if save:
-        path = PLOTS_DIR / f'task4_misclass_diff_{dataset_name}_{model_name.replace(" ", "_").lower()}.png'
+        path = PLOTS_DIR / f'misclass_diff_{dataset_name}_{model_name.replace(" ", "_").lower()}.png'
         fig.savefig(path, dpi=150, bbox_inches='tight')
         logger.info(f"Saved misclassification diff plot to {path}")
     plt.show()
@@ -672,7 +673,7 @@ def plot_sensitivity_curve(param_values, mean_scores, std_scores, param_name,
     plt.tight_layout()
     if save:
         safe_param = str(param_name).replace('/', '_').replace(' ', '_')
-        path = PLOTS_DIR / f'task4_sensitivity_{safe_param}_{dataset_name}_{model_name.replace(" ", "_").lower()}.png'
+        path = PLOTS_DIR / f'sensitivity_{safe_param}_{dataset_name}_{model_name.replace(" ", "_").lower()}.png'
         fig.savefig(path, dpi=150, bbox_inches='tight')
         logger.info(f"Saved sensitivity curve to {path}")
     plt.show()

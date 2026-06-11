@@ -1,0 +1,4 @@
+Dataset,Split Mode,Nested CV ROC-AUC (mean),Nested CV ROC-AUC (std),Test F1,Test ROC-AUC,Best Params
+telco,random,0.8484,0.0102,0.5805,0.8447,"{'learning_rate': 0.01, 'max_depth': 5, 'max_iter': 300}"
+bank,temporal,0.9454,0.0135,0.6206,0.9139,"{'learning_rate': 0.05, 'max_depth': None, 'max_iter': 100}"
+ecom,random,0.9318,0.0047,0.658,0.9348,"{'learning_rate': 0.01, 'max_depth': None, 'max_iter': 300}"
