@@ -192,6 +192,11 @@ def compute_shap_values(pipeline, X_sample, max_samples=200):
                     shap_values = shap_values[1]
                 else:
                     shap_values = shap_values[0]
+            elif isinstance(shap_values, np.ndarray) and shap_values.ndim == 3:
+                if shap_values.shape[2] == 2:
+                    shap_values = shap_values[:, :, 1]
+                else:
+                    shap_values = shap_values[:, :, 0]
             logger.info("SHAP TreeExplainer completed.")
         else:
             background = X_trans[:min(50, X_trans.shape[0])]
@@ -210,6 +215,11 @@ def compute_shap_values(pipeline, X_sample, max_samples=200):
 
             if isinstance(shap_values, list) and len(shap_values) == 2:
                 shap_values = shap_values[1]
+            elif isinstance(shap_values, np.ndarray) and shap_values.ndim == 3:
+                if shap_values.shape[2] == 2:
+                    shap_values = shap_values[:, :, 1]
+                else:
+                    shap_values = shap_values[:, :, 0]
 
             logger.info("SHAP KernelExplainer completed.")
     except Exception as e:
