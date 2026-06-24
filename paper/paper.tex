@@ -1,0 +1,218 @@
+%\pdfoutput=1
+\documentclass[10pt]{scrartcl}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman]{babel}
+\usepackage{tabto}
+\usepackage{microtype}
+%\usepackage{refcheck}
+\setkomafont{author}{\small}
+\sloppy
+\emergencystretch=3em
+
+
+\begin{document}
+\title{\LARGE Vorhersage von Kundenentscheidungen: Ein Vergleich von sieben Klassifikatoren auf drei tabellarischen Datensätzen}
+\author{
+	Priyanka Mukherjee (xxx)\\
+	Shaoib Akhtar (xxx)\\
+	Anna Galadi (xxx)\\
+	Carlos García (xxx)
+}
+\date{}
+\maketitle
+
+
+\begin{abstract}
+\noindent
+\textbf{Abstrakt (Gliederung, ca. 150--250 Wörter, EIN Absatz):}
+\begin{itemize}
+	\item Problem: binäre Vorhersage von Kundenentscheidungen (Kündigung/Churn, Vertragsabschluss, Kaufabsicht) auf tabellarischen Geschäftsdaten.
+	\item Ansatz: systematischer Vergleich von 7 Klassifikatoren (Logistic Regression, k-NN, Naive Bayes, SVM, MLP, Random Forest, Gradient Boosting) auf 3 Datensätzen (Telco Churn, Bank Marketing, Online Shoppers Intention) mit leak-freier Preprocessing-Pipeline, geschachtelter Kreuzvalidierung und F1/ROC-AUC als Hauptmetriken wegen Klassenungleichgewicht.
+	\item Kernergebnis: Random Forest auf Bank Marketing liefert bestes Ergebnis (ROC-AUC 0.943--0.945, nested CV); Modellanalyse (Permutation Importance, SHAP, Lernkurven, Hyperparameter-Sensitivität) zeigt \emph{duration} als dominantes Merkmal sowie deutliches Overfitting (Bias-Variance-Gap).
+	\item Implikation: Klassenungleichgewicht und Feature-Korrelationen (z.\,B. ökonomische Indikatoren im Bank-Datensatz, r=0.97) beeinflussen Modellwahl und Interpretierbarkeit stärker als reine Accuracy vermuten lässt.
+\end{itemize}
+\end{abstract}
+
+
+\section{Einleitung}
+
+\textbf{Gliederung (ca. 1 Seite, 4 Absätze gemäß Vorgabe):}
+
+\begin{enumerate}
+\item \textbf{Problem Statement:} Unternehmen müssen binäre Kundenentscheidungen vorhersagen (wird Kunde kündigen / Produkt kaufen / Termin abschließen?), um Ressourcen (Marketing, Retention) gezielt einzusetzen. Tabellarische Kundendaten mit gemischten Feature-Typen (numerisch/kategorial) und ausgeprägtem Klassenungleichgewicht erschweren dies.
+\item \textbf{Relevanz:} Kosten von Fehlklassifikationen sind asymmetrisch (z.\,B. verpasster Vertragsabschluss vs. unnötiger Telemarketing-Anruf); bessere Modelle senken Akquise-/Retentionkosten. Kurz auf die drei gewählten Domänen (Telekommunikation, Bankmarketing, E-Commerce) eingehen als Beispiele für breite Anwendbarkeit des Problems.
+\item \textbf{Überblick bestehender Lösungen:} Kurzer Verweis auf klassische Baselines (Logistic Regression, Naive Bayes, k-NN) vs. komplexere Verfahren (Ensembles, neuronale Netze) aus der Literatur zur Kundenabwanderungs-/Kaufvorhersage; Limitation: viele Studien evaluieren nur einen Datensatz/eine Domäne oder ignorieren Klassenungleichgewicht (Accuracy-Bias).
+\item \textbf{Eigener Beitrag:} Systematischer, leak-freier Vergleich von 7 Klassifikatoren über 3 Datensätze hinweg mit einheitlicher Methodik (Pipelines, nested CV, F1/ROC-AUC), gefolgt von vertiefter Modellanalyse (Permutation Importance, SHAP, Sensitivitätsanalyse, Fehleranalyse) des besten Modells. Kurze Vorwegnahme des Hauptresultats: Random Forest / Bank Marketing, ROC-AUC $\approx$ 0.94.
+\end{enumerate}
+
+\section{Verwandte Arbeiten}
+
+\textbf{Gliederung (ca. 1 Seite):}
+\begin{itemize}
+	\item Literatur zu Churn-Prediction in Telekommunikation (klassische Verfahren: Logistic Regression, Decision Trees, Ensembles) — Einordnung des Telco-Datensatzes.
+	\item Literatur zu Bank-Marketing/Term-Deposit-Vorhersage (UCI Bank-Marketing-Datensatz ist Standard-Benchmark) — welche Modelle/Resultate dort berichtet werden, insbesondere Rolle von \emph{duration} und makroökonomischen Indikatoren.
+	\item Literatur zu Kaufabsicht/Online-Shopper-Intention-Vorhersage (Session-/Clickstream-basierte Merkmale, PageValues als bekannt starker Prädiktor).
+	\item Allgemeine Methodik-Literatur: Umgang mit Klassenungleichgewicht (class\_weight, Resampling), Wahl von F1/ROC-AUC statt Accuracy, nested Cross-Validation zur unverzerrten Modellbewertung, SHAP/Permutation Importance als Standardverfahren der Modellinterpretation.
+	\item Abgrenzung zur eigenen Arbeit: Vergleich über mehrere Domänen mit identischer Pipeline statt domänenspezifischer Einzelstudien; kritische Diskussion von Kollinearität (z.\,B. emp.var.rate vs. euribor3m, r=0.97) bei Feature-Importance-Methoden.
+\end{itemize}
+
+\section{Methoden}
+
+\textbf{Gliederung (ca. 2--3 Seiten). Ziel: Studierende im selben Semester sollen die Kernidee nachvollziehen können.}
+
+\subsection{Datenvorverarbeitung (Pipeline)}
+\begin{itemize}
+	\item 7-stufige Preprocessing-Pipeline (\texttt{src/utils/preprocess.py}): Duplikate entfernen, Spaltennamen normalisieren, Strings trimmen, Platzhalter (\enquote{unknown}, \enquote{?}, 999) $\to$ NaN, numerische Spalten coercen, Imputation (Median/Modus), Zielvariable binär kodieren.
+	\item Leak-freie Transformation: \texttt{ColumnTransformer} (StandardScaler für numerische, OneHotEncoder für kategoriale Merkmale) ausschließlich innerhalb von \texttt{Pipeline}-Objekten, gefittet nur auf Trainingsfolds.
+\end{itemize}
+
+\subsection{Baseline-Klassifikatoren (Task 2)}
+\begin{itemize}
+	\item Kurze formale Beschreibung von Logistic Regression (Sigmoid + Cross-Entropy-Loss).
+	\item k-Nearest Neighbors (Distanzmaß, Mehrheitsentscheid, Wahl von k=5).
+	\item Naive Bayes (Unabhängigkeitsannahme zwischen Features; Limitation bei korrelierten Bank-Features).
+\end{itemize}
+
+\subsection{Fortgeschrittene Modelle (Task 3)}
+\label{sec:advanced-models}
+\begin{itemize}
+	\item Support Vector Machine: RBF-Kernel, Hyperparameter $C$ via GridSearchCV (Grid: $C \in \{0.01, 0.1, 1, 10\}$).
+	\item Multi-Layer Perceptron: Architektur-Suche über \texttt{hidden\_layer\_sizes} $\in \{(64,), (128,), (64,32), (128,64)\}$ und Regularisierung $\alpha$; Early Stopping.
+	\item Random Forest: Bagging von Entscheidungsbäumen, Hyperparameter \texttt{n\_estimators}, \texttt{max\_depth}, \texttt{max\_features}, \texttt{class\_weight=\textquotesingle balanced\textquotesingle} zur Behandlung des Klassenungleichgewichts.
+	\item Gradient Boosting: sequentielles Boosting (HistGradientBoosting), Hyperparameter \texttt{learning\_rate}, \texttt{max\_depth}, \texttt{max\_iter}.
+	\item \textbf{Wichtig:} Hier nur die Kernidee jedes Verfahrens kurz erläutern (kein vollständiges Tutorial) — Fokus auf das tatsächlich beste Modell (Random Forest) etwas ausführlicher beschreiben, da Aufgabe explizit das \emph{beste} Modell in ausreichendem Detail verlangt.
+\end{itemize}
+
+\subsection{Modellauswahl und -bewertung}
+\begin{itemize}
+	\item Geschachtelte Kreuzvalidierung (nested CV): inneres Loop für Hyperparameter-Tuning (GridSearchCV, Scoring meist \texttt{roc\_auc}), äußeres Loop für unverzerrte Generalisierungsschätzung.
+	\item \texttt{StratifiedKFold} (5 Folds) für Telco/Ecom; \texttt{TimeSeriesSplit} für Bank Marketing wegen zeitlicher Reihenfolge der Daten (Vermeidung von Look-Ahead-Bias / Concept Drift).
+	\item Random Seed 42 durchgängig für Reproduzierbarkeit.
+\end{itemize}
+
+\subsection{Modellanalyse-Framework (Task 4)}
+\begin{itemize}
+	\item \texttt{model\_analysis.py}: 16 modell-agnostische Funktionen (8 Berechnung + 8 Plot) für das beste Modell.
+	\item Kurze methodische Erläuterung der wichtigsten Verfahren, die im Experiments-Teil verwendet werden:
+	\begin{itemize}
+		\item Permutation Importance: Verschlechterung der Score-Metrik (F1) bei zufälliger Permutation einzelner Features.
+		\item SHAP (TreeExplainer): additive, spieltheoretisch fundierte Erklärung einzelner Vorhersagen; Summary-Plot (global) und Dependence-Plots (Top-3-Features).
+		\item Lernkurven: Trainings- vs. Validierungs-F1 über wachsende Trainingsgröße zur Diagnose von Bias/Variance.
+		\item Hyperparameter-Sensitivitätsanalyse: CV-Score als Funktion einzelner Hyperparameter (z.\,B. \texttt{n\_estimators}, \texttt{max\_depth}).
+		\item Konfusionsmatrix-Analyse (absolut + normiert) und Misclassification-Pattern-Analyse (Feature-Mittelwerte: korrekt vs. falsch klassifiziert).
+	\end{itemize}
+\end{itemize}
+
+\section{Experimente}
+
+\textbf{Gliederung (ca. 2--3 Seiten). Ziel der Experimente in 1--2 Sätzen formulieren:} Vergleich der Vorhersagegüte von sieben Klassifikatoren über drei Kundendatensätze hinweg unter einheitlicher, leak-freier Methodik, gefolgt von vertiefter Analyse des besten Modells (Random Forest / Bank Marketing) zur Erklärung seines Verhaltens.
+
+\subsection{Daten}
+\begin{itemize}
+	\item Drei Datensätze (Tabelle): Telco Customer Churn (7.043 Zeilen, 20 Features, Zielklasse Churn, Minorität 26.5\,\%), Bank Marketing (41.188 Zeilen, 21 Features, Zielklasse Term Deposit, Minorität 11.3\,\%), Online Shoppers Intention (12.330 Zeilen, 18 Features, Zielklasse Revenue, Minorität 15.5\,\%).
+	\item Quellen: Telco (Kaggle/IBM), Bank Marketing (UCI), Online Shoppers Intention (UCI).
+	\item Kurze EDA-Befunde je Datensatz (aus \texttt{reports/eda\_report.txt}): fehlende Werte/Platzhalter (z.\,B. \enquote{unknown} bei Bank-Job/Education, \enquote{999} bei pdays), Duplikate (Telco: 22, Bank: 12, Ecom: 125), starke Feature-Korrelationen bei Bank (emp.var.rate/euribor3m r=0.97), Klassenungleichgewicht in allen drei Datensätzen.
+	\item Begründung F1/ROC-AUC statt Accuracy aufgrund Klassenungleichgewicht.
+\end{itemize}
+
+\subsection{Versuchsaufbau}
+\begin{itemize}
+	\item Algorithmen: Logistic Regression, k-NN (k=5), Naive Bayes (Baselines); SVM (RBF), MLP, Random Forest, Gradient Boosting (fortgeschritten).
+	\item Metriken: Accuracy (zur Vollständigkeit), F1-Score und ROC-AUC (primär).
+	\item Hyperparameter-Optimierung: GridSearchCV pro Modell (Grids siehe Abschnitt~\ref{sec:advanced-models}), Scoring \texttt{roc\_auc} im inneren CV-Loop.
+	\item Modellauswahl/-bewertung: Nested Cross-Validation für fortgeschrittene Modelle; \texttt{StratifiedKFold} (Telco/Ecom) bzw. \texttt{TimeSeriesSplit} (Bank); finale Testresultate auf separatem Hold-out-Test-Set.
+	\item Reproduzierbarkeit: fixer Random State 42, Pipelines mit \texttt{ColumnTransformer} dokumentiert in \texttt{src/evaluation.py}, \texttt{src/gradient\_boosting.py}, \texttt{src/run\_analysis.py}.
+\end{itemize}
+
+\subsection{Ergebnisse und Diskussion}
+
+\paragraph{Hauptergebnisse — mit Tabellen/Abbildungen zu belegen.}
+\begin{itemize}
+	\item Tabelle: Baseline-CV-Ergebnisse (Accuracy/F1/ROC-AUC) für LogReg, k-NN, Naive Bayes auf allen 3 Datensätzen (Quelle: \texttt{reports/results/baseline\_cv\_results.csv}). Kernaussage: Logistic Regression dominiert die Baselines auf allen drei Datensätzen; Naive Bayes schwächste Baseline auf Bank (Unabhängigkeitsannahme verletzt durch korrelierte Features).
+	\item Tabelle: Vergleich aller 7 Modelle (Train/Valid/CV-Accuracy je Datensatz, Quelle: \texttt{notebooks/Vergleich.ipynb}) sowie nested-CV-ROC-AUC für fortgeschrittene Modelle (Quelle: \texttt{reports/results/gradient\_boosting\_results.csv}, \texttt{doc.md} Abschnitt 4).
+	\item Abbildung: Balkendiagramm Validation-Accuracy aller Klassifikatoren je Datensatz (aus \texttt{Vergleich.ipynb}).
+	\item Kernbefund: Random Forest auf Bank Marketing liefert höchste ROC-AUC (0.943--0.945, nested CV; Parameter: n\_estimators=200, max\_depth=20, max\_features='sqrt', class\_weight='balanced'); knapp gefolgt von MLP (0.941) und Gradient Boosting (0.916, Test-ROC-AUC).
+\end{itemize}
+
+\paragraph{Detaillierte Analyse des besten Modells (Random Forest / Bank Marketing) — Modellanalyse Task 4.}
+\begin{itemize}
+	\item Testergebnisse des finalen Modells: F1=0.576--0.648, ROC-AUC=0.911--0.914, Precision $\approx$0.54--0.66, Recall $\approx$0.51--0.81 (abhängig von Schwellenwert/Run), Specificity $\approx$0.95 (Quelle: \texttt{reports/results/analysis\_results.csv}).
+	\item Permutation Importance (Abb. \texttt{permutation\_imp\_bank\_random\_forest.png}): \emph{duration} dominantes Feature (Importance $\approx$0.23--0.24), konsistent mit EDA-Korrelation (r=0.405 mit Zielvariable).
+	\item SHAP-Analyse (Abb. \texttt{shap\_summary\_bank\_random\_forest.png} + Dependence-Plots für duration, emp.var.rate, euribor3m, nr.employed, poutcome): bestätigt globale Wichtigkeit, liefert zusätzlich lokale Interpretierbarkeit; Diskussion der Kollinearität ökonomischer Indikatoren (emp.var.rate vs. euribor3m, r=0.97) als Limitation von Permutation/SHAP unter Multikollinearität.
+	\item Lernkurven (Abb. \texttt{learning\_curve\_bank\_random\_forest.png}): großer Bias-Variance-Gap ($\approx$0.45; Trainings-Accuracy 1.000 vs. Validierungs-Accuracy $\approx$0.91) $\to$ deutliches Overfitting trotz \texttt{class\_weight='balanced'} und \texttt{max\_depth=20}.
+	\item Hyperparameter-Sensitivität (Abb. \texttt{sensitivity\_n\_estimators\_...}, \texttt{sensitivity\_max\_depth\_...}): CV-Score-Verlauf über \texttt{n\_estimators} $\in\{10,...,500\}$ und \texttt{max\_depth} $\in\{3,...,20,\text{None}\}$; Plateau-Effekt ab gewissem Punkt, sinkender Nutzen weiterer Bäume/Tiefe.
+	\item Konfusionsmatrix (Abb. \texttt{confusion\_bank\_random\_forest.png}): hohe Recall/niedrige Precision-Charakteristik — Modell findet die meisten tatsächlichen Abschlüsse, produziert aber viele False Positives.
+	\item Misclassification-Pattern (Abb. \texttt{misclass\_diff\_bank\_random\_forest.png}): fehlklassifizierte Fälle unterscheiden sich systematisch v.\,a. bei \emph{duration} und ökonomischen Indikatoren $\to$ Modell schwach an Entscheidungsgrenze.
+\end{itemize}
+
+\paragraph{Vergleich mit Literatur.} Einordnung der erreichten ROC-AUC-Werte (Bank $\approx$0.94) im Vergleich zu publizierten Resultaten auf dem UCI-Bank-Marketing-Datensatz; Diskussion möglicher Abweichungen (Preprocessing-Unterschiede, Wahl von TimeSeriesSplit statt zufälliger Split).
+
+\paragraph{Limitationen (aus bestehender Discussion in \texttt{model\_analysis.ipynb} übernehmen und ausbauen).}
+\begin{itemize}
+	\item Modellanalyse nur für einen Datensatz/ein Modell (Bank/Random Forest) durchgeführt; Telco und Ecom nicht vertieft analysiert.
+	\item Temporale Generalisierung: ökonomische Indikatoren ändern sich über Zeit; TimeSeriesSplit verwendet, aber Modell könnte bei Wirtschaftslageänderung degradieren.
+	\item SHAP nur auf 200 Testsamples berechnet (Rechenaufwand) $\to$ mögliche Instabilität der Dependence-Plots.
+	\item Klassenungleichgewicht trotz \texttt{class\_weight='balanced'} weiterhin Herausforderung; SMOTE/Threshold-Tuning/Cost-Sensitive Learning nicht erprobt.
+	\item Sensitivitätsanalyse nur für \texttt{n\_estimators}/\texttt{max\_depth}; weitere Parameter (\texttt{min\_samples\_leaf}, \texttt{min\_samples\_split}, \texttt{max\_features}) nicht untersucht.
+	\item \emph{duration} praktisch nur post-hoc verfügbar (erst nach Anruf bekannt) $\to$ Einschränkung der praktischen Nutzbarkeit für prospektives Targeting.
+\end{itemize}
+
+\paragraph{Breitere Implikationen.} Geschäftsrelevanz der Precision/Recall-Charakteristik (Kosten von False Positives [unnötige Anrufe] vs.\ False Negatives [verpasste Abschlüsse]); Hinweis auf mögliche Schwellenwert-Anpassung je Geschäftsszenario.
+
+\section{Fazit}
+
+\textbf{Gliederung (1--2 Absätze, keine neuen Ergebnisse):}
+\begin{itemize}
+	\item Zusammenfassung: Random Forest erzielt über alle verglichenen Modelle und Datensätze hinweg die beste Generalisierungsleistung (Bank Marketing, ROC-AUC $\approx$0.94); Logistic Regression als stärkste Baseline; Klassenungleichgewicht und Feature-Korrelationen als durchgängige Herausforderungen.
+	\item Limitationen kurz wiederholen (Overfitting/Bias-Variance-Gap, eingeschränkter Analyseumfang auf einen Datensatz, fehlende Exploration von Resampling-/Cost-Sensitive-Verfahren).
+	\item Offene Fragen/Ausblick: Modellanalyse auf Telco/Ecom ausweiten, Threshold-/Cost-Sensitive-Tuning für Geschäftsszenarien, Untersuchung weiterer Hyperparameter, Robustheit gegenüber Concept Drift (Bank-Datensatz) genauer untersuchen.
+\end{itemize}
+
+\section{Literaturverzeichnis — Hinweis}
+
+Alle in der Arbeit zitierten Quellen sind im Literaturverzeichnis aufzuführen.
+
+Externe Aussagen, Gedanken und Ideen, die nicht zum Allgemeinwissen gehören (z.\,B. die Normalverteilung), müssen durch eine Quellenangabe belegt werden.
+
+Bei der ersten Erwähnung von Verfahren, Konzepten, Frameworks usw. ist der Name der Autorin/des Autors in der Zitation anzugeben. Für Standardverfahren kann ein Lehrbuch als Quelle zitiert werden.
+
+Der Zitier- und Referenzierungsstil ist über die gesamte Arbeit hinweg konsistent zu halten (z.\,B. APA, Chicago oder ein anderer gängiger Stil).
+
+\paragraph*{Geplante Referenzen (Platzhalter, noch zu ergänzen):}
+\begin{itemize}
+	\item UCI Bank Marketing Dataset (Moro, Cortez, Rita) — Originalquelle des Bank-Datensatzes.
+	\item Originalquelle Online Shoppers Purchasing Intention Dataset (Sakar et al.).
+	\item Telco Customer Churn Dataset (IBM/Kaggle).
+	\item Breiman (2001) — Random Forests.
+	\item Lundberg \& Lee (2017) — SHAP (A Unified Approach to Interpreting Model Predictions).
+	\item Lehrbuch-Standardreferenzen zu Logistic Regression, SVM, MLP und Gradient Boosting, z.\,B. Hastie/Tibshirani/Friedman, \emph{Elements of Statistical Learning}, oder Bishop, \emph{Pattern Recognition and Machine Learning}.
+	\item Ggf. weitere Literatur zu Churn-Prediction/Bank-Marketing-Klassifikation aus der Related-Work-Recherche.
+\end{itemize}
+
+\paragraph*{Anmerkung:}
+Die in diesem Dokument verwendete \verb|thebibliography|-Umgebung eignet sich für eine kleine Anzahl von Referenzen. Für größere Projekte sollten \verb|.bib|-Dateien zur besseren Verwaltung der Referenzen verwendet werden.
+
+
+
+\addcontentsline{toc}{section}{Literaturverzeichnis}
+\begin{thebibliography}{}
+\small
+
+\bibitem{Breiman2001}
+L.~Breiman.
+\newblock Random forests.
+\newblock \emph{Machine Learning}, 45(1):5--32, 2001.
+
+\bibitem{Lundberg2017}
+S.~M.~Lundberg and S.-I.~Lee.
+\newblock A unified approach to interpreting model predictions.
+\newblock \emph{Advances in Neural Information Processing Systems}, 2017.
+
+\bibitem{Moro2014}
+S.~Moro, P.~Cortez, and P.~Rita.
+\newblock A data-driven approach to predict the success of bank telemarketing.
+\newblock \emph{Decision Support Systems}, 62:22--31, 2014.
+
+\end{thebibliography}
+
+\end{document}
