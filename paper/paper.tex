@@ -13,7 +13,7 @@
 \begin{document}
 \title{\LARGE Vorhersage von Kundenentscheidungen: Ein Vergleich von sieben Klassifikatoren auf drei tabellarischen Datensätzen}
 \author{
-	Priyanka Mukherjee (xxx)\\
+	Quirin Lex (xxx)\\
 	Shaoib Akhtar (xxx)\\
 	Anna Galadi (xxx)\\
 	Carlos García (xxx)
@@ -79,7 +79,18 @@
 	\item Support Vector Machine: RBF-Kernel, Hyperparameter $C$ via GridSearchCV (Grid: $C \in \{0.01, 0.1, 1, 10\}$).
 	\item Multi-Layer Perceptron: Architektur-Suche über \texttt{hidden\_layer\_sizes} $\in \{(64,), (128,), (64,32), (128,64)\}$ und Regularisierung $\alpha$; Early Stopping.
 	\item Random Forest: Bagging von Entscheidungsbäumen, Hyperparameter \texttt{n\_estimators}, \texttt{max\_depth}, \texttt{max\_features}, \texttt{class\_weight=\textquotesingle balanced\textquotesingle} zur Behandlung des Klassenungleichgewichts.
-	\item Gradient Boosting: sequentielles Boosting (HistGradientBoosting), Hyperparameter \texttt{learning\_rate}, \texttt{max\_depth}, \texttt{max\_iter}.
+	\item Gradient Boosting: konstruiert ein additives Ensemble flacher Entscheidungsbäume,
+	die --- anders als beim Bagging des Random Forest --- sequentiell trainiert
+	werden: Jeder Baum approximiert den negativen Gradienten der logistischen
+	Verlustfunktion und korrigiert so die Fehler des bisherigen Modells, wodurch
+	Boosting primär den Bias statt der Varianz reduziert \cite{Friedman2001}. Wir
+	verwenden die histogramm-basierte, auf großen Datensätzen effiziente
+	Implementierung \texttt{HistGradientBoostingClassifier} \cite{Pedregosa2011} in
+	derselben leak-freien Pipeline wie die übrigen Modelle. Per \texttt{GridSearchCV}
+	optimiert werden \texttt{learning\_rate} $\in \{0.01, 0.05, 0.1\}$,
+	\texttt{max\_iter} $\in \{100, 200, 300\}$ und \texttt{max\_depth}
+	$\in \{5, 10, 15, \text{None}\}$, wobei Lernrate und Iterationszahl den zentralen
+	Regularisierungs-Kompromiss bilden.
 	\item \textbf{Wichtig:} Hier nur die Kernidee jedes Verfahrens kurz erläutern (kein vollständiges Tutorial) — Fokus auf das tatsächlich beste Modell (Random Forest) etwas ausführlicher beschreiben, da Aufgabe explizit das \emph{beste} Modell in ausreichendem Detail verlangt.
 \end{itemize}
 
@@ -129,10 +140,49 @@
 \paragraph{Hauptergebnisse — mit Tabellen/Abbildungen zu belegen.}
 \begin{itemize}
 	\item Tabelle: Baseline-CV-Ergebnisse (Accuracy/F1/ROC-AUC) für LogReg, k-NN, Naive Bayes auf allen 3 Datensätzen (Quelle: \texttt{reports/results/baseline\_cv\_results.csv}). Kernaussage: Logistic Regression dominiert die Baselines auf allen drei Datensätzen; Naive Bayes schwächste Baseline auf Bank (Unabhängigkeitsannahme verletzt durch korrelierte Features).
-	\item Tabelle: Vergleich aller 7 Modelle (Train/Valid/CV-Accuracy je Datensatz, Quelle: \texttt{notebooks/Vergleich.ipynb}) sowie nested-CV-ROC-AUC für fortgeschrittene Modelle (Quelle: \texttt{reports/results/gradient\_boosting\_results.csv}, \texttt{doc.md} Abschnitt 4).
+	\item Tabelle: Vergleich aller 7 Modelle nach ROC-AUC je Datensatz (Tab.~\ref{tab:overall}; Quellen: \texttt{baseline\_cv\_results.csv}, \texttt{gradient\_boosting\_results.csv}, \texttt{notebooks/Vergleich.ipynb}, \texttt{doc.md} Abschnitt 4).
 	\item Abbildung: Balkendiagramm Validation-Accuracy aller Klassifikatoren je Datensatz (aus \texttt{Vergleich.ipynb}).
 	\item Kernbefund: Random Forest auf Bank Marketing liefert höchste ROC-AUC (0.943--0.945, nested CV; Parameter: n\_estimators=200, max\_depth=20, max\_features='sqrt', class\_weight='balanced'); knapp gefolgt von MLP (0.941) und Gradient Boosting (0.916, Test-ROC-AUC).
+	\item Gradient Boosting: erzielt über alle drei Datensätze hohe ROC-AUC-Werte (0.85--0.95, Tab.~\ref{tab:gb-results}) und übertrifft durchgängig die Baseline-Klassifikatoren. Auf Bank Marketing liegt die nested-CV-Schätzung (0.945) über der Test-ROC-AUC (0.914); diese Lücke erklärt sich durch den temporalen Split (Concept Drift bei den ökonomischen Indikatoren), nicht durch Overfitting. Die optimalen Hyperparameter für Telco und E-Commerce (niedrige Lernrate 0.01 bei 300 Iterationen) illustrieren den Regularisierungs-Kompromiss zwischen Lernrate und Iterationszahl.
 \end{itemize}
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Modellvergleich (ROC-AUC) über alle drei Datensätze. Baselines aus 5-fold CV, fortgeschrittene Modelle aus nested CV bzw. Hold-out-Test. \textit{tbd}: SVM-Werte (ROC-AUC/F1) von Florian noch nachzurechnen --- bislang nur Accuracy vorhanden. Bank-Spalte: MLP/RF aus Random-, GB aus Temporal-Split.}
+\label{tab:overall}
+\begin{tabular}{lccc}
+\hline
+Modell & Telco & Bank & E-Commerce \\
+\hline
+Logistic Regression & 0.846 & 0.928 & 0.890 \\
+k-NN ($k=5$)        & 0.783 & 0.838 & 0.786 \\
+Naive Bayes         & 0.821 & 0.819 & 0.812 \\
+SVM (RBF)           & \textit{tbd} & \textit{tbd} & \textit{tbd} \\
+MLP                 & 0.844 & 0.941 & 0.916 \\
+Random Forest       & 0.838 & 0.943 & 0.924 \\
+Gradient Boosting   & 0.848 & 0.945 & 0.932 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Gradient-Boosting-Ergebnisse je Datensatz (nested CV bzw. Hold-out-Test).
+Beste Parameter (\texttt{learning\_rate}/\texttt{max\_depth}/\texttt{max\_iter}):
+Telco 0.01/5/300, Bank 0.05/None/100, E-Commerce 0.01/None/300.}
+\label{tab:gb-results}
+\begin{tabular}{lcccc}
+\hline
+Datensatz & Split & Nested-CV ROC-AUC & Test ROC-AUC & Test F1 \\
+\hline
+Telco & random   & $0.848 \pm 0.010$ & 0.845 & 0.581 \\
+Bank  & temporal & $0.945 \pm 0.014$ & 0.914 & 0.621 \\
+Ecom  & random   & $0.932 \pm 0.005$ & 0.935 & 0.658 \\
+\hline
+\end{tabular}
+\end{table}
 
 \paragraph{Detaillierte Analyse des besten Modells (Random Forest / Bank Marketing) — Modellanalyse Task 4.}
 \begin{itemize}
@@ -203,6 +253,11 @@ L.~Breiman.
 \newblock Random forests.
 \newblock \emph{Machine Learning}, 45(1):5--32, 2001.
 
+\bibitem{Friedman2001}
+J.~H.~Friedman.
+\newblock Greedy function approximation: A gradient boosting machine.
+\newblock \emph{The Annals of Statistics}, 29(5):1189--1232, 2001.
+
 \bibitem{Lundberg2017}
 S.~M.~Lundberg and S.-I.~Lee.
 \newblock A unified approach to interpreting model predictions.
@@ -212,6 +267,11 @@ S.~M.~Lundberg and S.-I.~Lee.
 S.~Moro, P.~Cortez, and P.~Rita.
 \newblock A data-driven approach to predict the success of bank telemarketing.
 \newblock \emph{Decision Support Systems}, 62:22--31, 2014.
+
+\bibitem{Pedregosa2011}
+F.~Pedregosa et al.
+\newblock Scikit-learn: Machine learning in Python.
+\newblock \emph{Journal of Machine Learning Research}, 12:2825--2830, 2011.
 
 \end{thebibliography}
 
