@@ -14,7 +14,7 @@
 \title{\LARGE Vorhersage von Kundenentscheidungen: Ein Vergleich von sieben Klassifikatoren auf drei tabellarischen Datensätzen}
 \author{
 	Quirin Lex (xxx)\\
-	Shaoib Akhtar (xxx)\\
+	Xuan Truong Nguyen (xxx)\\
 	Anna Galadi (xxx)\\
 	Carlos García (xxx)
 }
@@ -24,13 +24,11 @@
 
 \begin{abstract}
 \noindent
-\textbf{Abstrakt (Gliederung, ca. 150--250 Wörter, EIN Absatz):}
-\begin{itemize}
-	\item Problem: binäre Vorhersage von Kundenentscheidungen (Kündigung/Churn, Vertragsabschluss, Kaufabsicht) auf tabellarischen Geschäftsdaten.
-	\item Ansatz: systematischer Vergleich von 7 Klassifikatoren (Logistic Regression, k-NN, Naive Bayes, SVM, MLP, Random Forest, Gradient Boosting) auf 3 Datensätzen (Telco Churn, Bank Marketing, Online Shoppers Intention) mit leak-freier Preprocessing-Pipeline, geschachtelter Kreuzvalidierung und F1/ROC-AUC als Hauptmetriken wegen Klassenungleichgewicht.
-	\item Kernergebnis: Random Forest auf Bank Marketing liefert bestes Ergebnis (ROC-AUC 0.943--0.945, nested CV); Modellanalyse (Permutation Importance, SHAP, Lernkurven, Hyperparameter-Sensitivität) zeigt \emph{duration} als dominantes Merkmal sowie deutliches Overfitting (Bias-Variance-Gap).
-	\item Implikation: Klassenungleichgewicht und Feature-Korrelationen (z.\,B. ökonomische Indikatoren im Bank-Datensatz, r=0.97) beeinflussen Modellwahl und Interpretierbarkeit stärker als reine Accuracy vermuten lässt.
-\end{itemize}
+\textbf{Abstrakt:}
+In dieser Arbeit handelt es sich um die binäre Klassifikation von Kundenentscheidungen auf tabellarischen Geschäftsdaten, nämlich die Vorhersage von Kündigung, Vertragsabschluss und Kaufabsicht. Die zentrale Herausforderung besteht darin, dass solche Datensätze typischerweise stark unbalancierte Klassen haben, was konventionelle Evaluationsmetriken wie Accuracy irreführend macht und die Modellwahl 
+etwas erschwert. Der gewählte Ansatz umfasst einen systematischen Vergleich von sieben Klassifikationsverfahren — Logistic Regression, k-Nearest Neighbors, Naive Bayes, Support Vector Machine, Multi-Layer Perceptron, Random Forest und Gradient Boosting — auf drei öffentlich verfügbaren Datensätzen. Alle Modelle werden in einer leak-freien Preprocessing-Pipeline mit geschachtelter 
+Kreuzvalidierung evaluiert, wobei F1-Score und ROC-AUC als Hauptmetriken dienen. Hier wurde es anhand der Ergebnisse gezeigt, dass ensemble-basierte Verfahren durchgehend die höchste Vorhersagegüte erzielen aber gleichzeitig eine erhöhte Anfälligkeit für Overfitting aufweisen. Eine ergänzende Modellanalyse mittels Permutation Importance, SHAP-Werten und Lernkurven verdeutlicht darüber hinaus, dass 
+einzelne dominante Merkmale sowie starke Feature-Korrelationen die Interpretierbarkeit der Modelle erheblich einschränken können.
 \end{abstract}
 
 
@@ -62,7 +60,7 @@
 
 \subsection{Datenvorverarbeitung (Pipeline)}
 \begin{itemize}
-	\item 7-stufige Preprocessing-Pipeline (\texttt{src/utils/preprocess.py}): Duplikate entfernen, Spaltennamen normalisieren, Strings trimmen, Platzhalter (\enquote{unknown}, \enquote{?}, 999) $\to$ NaN, numerische Spalten coercen, Imputation (Median/Modus), Zielvariable binär kodieren.
+	\item 7-stufige Preprocessing-Pipeline (\texttt{src/utils/preprocess.py}): Duplikate entfernen, Spaltennamen normalisieren, Strings trimmen, Platzhalter (unknown, ?, 999) $\to$ NaN, numerische Spalten coercen, Imputation (Median/Modus), Zielvariable binär kodieren.
 	\item Leak-freie Transformation: \texttt{ColumnTransformer} (StandardScaler für numerische, OneHotEncoder für kategoriale Merkmale) ausschließlich innerhalb von \texttt{Pipeline}-Objekten, gefittet nur auf Trainingsfolds.
 \end{itemize}
 
@@ -89,7 +87,7 @@
 	derselben leak-freien Pipeline wie die übrigen Modelle. Per \texttt{GridSearchCV}
 	optimiert werden \texttt{learning\_rate} $\in \{0.01, 0.05, 0.1\}$,
 	\texttt{max\_iter} $\in \{100, 200, 300\}$ und \texttt{max\_depth}
-	$\in \{5, 10, 15, \text{None}\}$, wobei Lernrate und Iterationszahl den zentralen
+	$\in \{5, 10, 15, None\}$, wobei Lernrate und Iterationszahl den zentralen
 	Regularisierungs-Kompromiss bilden.
 	\item \textbf{Wichtig:} Hier nur die Kernidee jedes Verfahrens kurz erläutern (kein vollständiges Tutorial) — Fokus auf das tatsächlich beste Modell (Random Forest) etwas ausführlicher beschreiben, da Aufgabe explizit das \emph{beste} Modell in ausreichendem Detail verlangt.
 \end{itemize}
@@ -122,7 +120,7 @@
 \begin{itemize}
 	\item Drei Datensätze (Tabelle): Telco Customer Churn (7.043 Zeilen, 20 Features, Zielklasse Churn, Minorität 26.5\,\%), Bank Marketing (41.188 Zeilen, 21 Features, Zielklasse Term Deposit, Minorität 11.3\,\%), Online Shoppers Intention (12.330 Zeilen, 18 Features, Zielklasse Revenue, Minorität 15.5\,\%).
 	\item Quellen: Telco (Kaggle/IBM), Bank Marketing (UCI), Online Shoppers Intention (UCI).
-	\item Kurze EDA-Befunde je Datensatz (aus \texttt{reports/eda\_report.txt}): fehlende Werte/Platzhalter (z.\,B. \enquote{unknown} bei Bank-Job/Education, \enquote{999} bei pdays), Duplikate (Telco: 22, Bank: 12, Ecom: 125), starke Feature-Korrelationen bei Bank (emp.var.rate/euribor3m r=0.97), Klassenungleichgewicht in allen drei Datensätzen.
+	\item Kurze EDA-Befunde je Datensatz (aus \texttt{reports/eda\_report.txt}): fehlende Werte/Platzhalter (z.\,B. unknown bei Bank-Job/Education, 999 bei pdays), Duplikate (Telco: 22, Bank: 12, Ecom: 125), starke Feature-Korrelationen bei Bank (emp.var.rate/euribor3m r=0.97), Klassenungleichgewicht in allen drei Datensätzen.
 	\item Begründung F1/ROC-AUC statt Accuracy aufgrund Klassenungleichgewicht.
 \end{itemize}
 
@@ -190,7 +188,7 @@ Ecom  & random   & $0.932 \pm 0.005$ & 0.935 & 0.658 \\
 	\item Permutation Importance (Abb. \texttt{permutation\_imp\_bank\_random\_forest.png}): \emph{duration} dominantes Feature (Importance $\approx$0.23--0.24), konsistent mit EDA-Korrelation (r=0.405 mit Zielvariable).
 	\item SHAP-Analyse (Abb. \texttt{shap\_summary\_bank\_random\_forest.png} + Dependence-Plots für duration, emp.var.rate, euribor3m, nr.employed, poutcome): bestätigt globale Wichtigkeit, liefert zusätzlich lokale Interpretierbarkeit; Diskussion der Kollinearität ökonomischer Indikatoren (emp.var.rate vs. euribor3m, r=0.97) als Limitation von Permutation/SHAP unter Multikollinearität.
 	\item Lernkurven (Abb. \texttt{learning\_curve\_bank\_random\_forest.png}): großer Bias-Variance-Gap ($\approx$0.45; Trainings-Accuracy 1.000 vs. Validierungs-Accuracy $\approx$0.91) $\to$ deutliches Overfitting trotz \texttt{class\_weight='balanced'} und \texttt{max\_depth=20}.
-	\item Hyperparameter-Sensitivität (Abb. \texttt{sensitivity\_n\_estimators\_...}, \texttt{sensitivity\_max\_depth\_...}): CV-Score-Verlauf über \texttt{n\_estimators} $\in\{10,...,500\}$ und \texttt{max\_depth} $\in\{3,...,20,\text{None}\}$; Plateau-Effekt ab gewissem Punkt, sinkender Nutzen weiterer Bäume/Tiefe.
+	\item Hyperparameter-Sensitivität (Abb. \texttt{sensitivity\_n\_estimators\_...}, \texttt{sensitivity\_max\_depth\_...}): CV-Score-Verlauf über \texttt{n\_estimators} $\in\{10,...,500\}$ und \texttt{max\_depth} $\in\{3,...,20,None\}$; Plateau-Effekt ab gewissem Punkt, sinkender Nutzen weiterer Bäume/Tiefe.
 	\item Konfusionsmatrix (Abb. \texttt{confusion\_bank\_random\_forest.png}): hohe Recall/niedrige Precision-Charakteristik — Modell findet die meisten tatsächlichen Abschlüsse, produziert aber viele False Positives.
 	\item Misclassification-Pattern (Abb. \texttt{misclass\_diff\_bank\_random\_forest.png}): fehlklassifizierte Fälle unterscheiden sich systematisch v.\,a. bei \emph{duration} und ökonomischen Indikatoren $\to$ Modell schwach an Entscheidungsgrenze.
 \end{itemize}
