@@ -33,15 +33,20 @@ einzelne dominante Merkmale sowie starke Feature-Korrelationen die Interpretierb
 
 
 \section{Einleitung}
+Heutzutage verfügen Unternehmen ständig über umfangreiche tabellarische Kundendaten, die von Vertragslaufzeiten und Nutzungsverhalten bis hin zu demografischen Merkmalen und makroökonomischen Indikatoren reichen. Dies führt dazu, dass die systematische Analyse und Auswertung solcher Daten erforderlich sind. Hierbei bieten die maschinellen Lernverfahren die Möglichkeit, Kundenentscheidungen frühzeitig 
+vorherzusagen und daher lässt sich die Grundlage für gezielte Maßnahmen in Marketing, Kundenbindung und Ressourcenplanung bilden.
 
-\textbf{Gliederung (ca. 1 Seite, 4 Absätze gemäß Vorgabe):}
+Die vorliegende Arbeit befasst sich mit der binären Klassifikation von Kundenentscheidungen auf tabellarischen Geschäftsdaten. Im Mittelpunkt steht die Frage, welche Klassifikationsverfahren unter praxisnahen Bedingungen, insbesondere bei stark unbalancierten Klassen, korrelierten Merkmalen und begrenztem Datenumfang, zuverlässige Vorhersagen liefern. Dabei geht es nicht nur um die reine Vorhersagegüte, 
+sondern auch um die Interpretierbarkeit der Modelle und die Robustheit der Evaluationsergebnisse.
 
-\begin{enumerate}
-\item \textbf{Problem Statement:} Unternehmen müssen binäre Kundenentscheidungen vorhersagen (wird Kunde kündigen / Produkt kaufen / Termin abschließen?), um Ressourcen (Marketing, Retention) gezielt einzusetzen. Tabellarische Kundendaten mit gemischten Feature-Typen (numerisch/kategorial) und ausgeprägtem Klassenungleichgewicht erschweren dies.
-\item \textbf{Relevanz:} Kosten von Fehlklassifikationen sind asymmetrisch (z.\,B. verpasster Vertragsabschluss vs. unnötiger Telemarketing-Anruf); bessere Modelle senken Akquise-/Retentionkosten. Kurz auf die drei gewählten Domänen (Telekommunikation, Bankmarketing, E-Commerce) eingehen als Beispiele für breite Anwendbarkeit des Problems.
-\item \textbf{Überblick bestehender Lösungen:} Kurzer Verweis auf klassische Baselines (Logistic Regression, Naive Bayes, k-NN) vs. komplexere Verfahren (Ensembles, neuronale Netze) aus der Literatur zur Kundenabwanderungs-/Kaufvorhersage; Limitation: viele Studien evaluieren nur einen Datensatz/eine Domäne oder ignorieren Klassenungleichgewicht (Accuracy-Bias).
-\item \textbf{Eigener Beitrag:} Systematischer, leak-freier Vergleich von 7 Klassifikatoren über 3 Datensätze hinweg mit einheitlicher Methodik (Pipelines, nested CV, F1/ROC-AUC), gefolgt von vertiefter Modellanalyse (Permutation Importance, SHAP, Sensitivitätsanalyse, Fehleranalyse) des besten Modells. Kurze Vorwegnahme des Hauptresultats: Random Forest / Bank Marketing, ROC-AUC $\approx$ 0.94.
-\end{enumerate}
+Die Relevanz dieser Fragestellung ergibt sich aus zwei Faktoren. Erstens ist die Wahl des Klassifikationsverfahrens in der Praxis häufig nicht trivial, d.h. unterschiedliche Modelle reagieren unterschiedlich auf Klassenverteilung und die Dimensionalität der Daten, sodass ein einzelner Datensatz oder eine einzelne Metrik kein vollständiges Bild liefert. Zweitens können fehlerhafte Evaluationsstrategien 
+wie Data Leakage durch Preprocessing oder die Verwendung von Accuracy bei unbalancierten Klassen zu verzerrten Ergebnissen führen, die in der Praxis falsche Entscheidungen nach sich ziehen. Ein systematischer Vergleich unterschiedlicher Verfahren auf mehreren Datensätzen adressiert hierbei beide Probleme.
+
+Vergleichende Studien zu Klassifikationsverfahren auf tabellarischen Geschäftsdaten sind in der Literatur breit vertreten. Arbeiten wie die von Fernández-Delgado et al.\cite{FernandezDelgado2014} untersuchen eine Vielzahl von Klassifikatoren auf zahlreichen Datensätzen und liefern wertvolle Orientierung bei der Modellwahl. Währenddessen stimmen datensatzspezifische Studien z. B. zur Vorhersage von Kundenabwanderung\cite{Ahmad2019} 
+oder Kaufverhalten\cite{Sakar2019}, einzelne Verfahren gezielt auf bestimmte Anwendungskontexte ab. Die vorliegende Arbeit verfolgt einen ergänzenden Ansatz, indem sie einen einheitlichen methodischen Rahmen über mehrere Datensätze und Modelle hinweg anlegt. Daneben werden Aspekte wie Interpretierbarkeit, Generalisierungsverhalten und den Einfluss von Klassenungleichgewicht auch systematisch berücksichtigt.
+
+Diese Arbeit leistet einen Beitrag, indem sie sieben Klassifikationsverfahren: Logistic Regression, k-Nearest Neighbors, Naive Bayes, Support Vector Machine, Multi-Layer Perceptron, Random Forest und Gradient Boosting, auf drei öffentlich verfügbaren Datensätzen (Telco Customer Churn, Bank Marketing, Online Shoppers Intention) vergleicht. Alle Modelle werden in einer einheitlichen, leak-freien Preprocessing-Pipeline 
+mit geschachtelter Kreuzvalidierung evaluiert, wobei F1-Score und ROC-AUC als Hauptmetriken dienen. Über den reinen Modellvergleich hinaus umfasst die Analyse Lernkurven, Hyperparameter-Sensitivitätsanalysen, etc. , um nicht nur die Vorhersagegüte, sondern auch die Interpretierbarkeit und das Generalisierungsverhalten der Modelle zu bewerten.
 
 \section{Verwandte Arbeiten}
 
@@ -246,30 +251,45 @@ Die in diesem Dokument verwendete \verb|thebibliography|-Umgebung eignet sich f�
 \begin{thebibliography}{}
 \small
 
-\bibitem{Breiman2001}
-L.~Breiman.
-\newblock Random forests.
-\newblock \emph{Machine Learning}, 45(1):5--32, 2001.
+\bibitem{FernandezDelgado2014}
+M.~Fern\'{a}ndez-Delgado, E.~Cernadas, S.~Barro, and D.~Amorim.
+\newblock Do we need hundreds of classifiers to solve real world classification problems?
+\newblock \emph{Journal of Machine Learning Research}, 15(1):3133--3181, 2014.
 
-\bibitem{Friedman2001}
-J.~H.~Friedman.
-\newblock Greedy function approximation: A gradient boosting machine.
-\newblock \emph{The Annals of Statistics}, 29(5):1189--1232, 2001.
+\bibitem{Ahmad2019}
+A.~K.~Ahmad, A.~Jafar, and K.~Aljoumaa.
+\newblock Customer churn prediction in telecom using machine learning in big data platform.
+\newblock \emph{Journal of Big Data}, 6(1):28, 2019.
 
-\bibitem{Lundberg2017}
-S.~M.~Lundberg and S.-I.~Lee.
-\newblock A unified approach to interpreting model predictions.
-\newblock \emph{Advances in Neural Information Processing Systems}, 2017.
+\bibitem{Sakar2019}
+C.~O.~Sakar, S.~O.~Polat, M.~Katircioglu, and Y.~Kastro.
+\newblock Real-time prediction of online shoppers' purchasing intention using multilayer perceptron and LSTM recurrent neural networks.
+\newblock \emph{Neural Computing and Applications}, 31(10):6893--6908, 2019.
 
-\bibitem{Moro2014}
-S.~Moro, P.~Cortez, and P.~Rita.
-\newblock A data-driven approach to predict the success of bank telemarketing.
-\newblock \emph{Decision Support Systems}, 62:22--31, 2014.
+% \bibitem{Breiman2001}
+% L.~Breiman.
+% \newblock Random forests.
+% \newblock \emph{Machine Learning}, 45(1):5--32, 2001.
 
-\bibitem{Pedregosa2011}
-F.~Pedregosa et al.
-\newblock Scikit-learn: Machine learning in Python.
-\newblock \emph{Journal of Machine Learning Research}, 12:2825--2830, 2011.
+% \bibitem{Friedman2001}
+% J.~H.~Friedman.
+% \newblock Greedy function approximation: A gradient boosting machine.
+% \newblock \emph{The Annals of Statistics}, 29(5):1189--1232, 2001.
+
+% \bibitem{Lundberg2017}
+% S.~M.~Lundberg and S.-I.~Lee.
+% \newblock A unified approach to interpreting model predictions.
+% \newblock \emph{Advances in Neural Information Processing Systems}, 2017.
+
+% \bibitem{Moro2014}
+% S.~Moro, P.~Cortez, and P.~Rita.
+% \newblock A data-driven approach to predict the success of bank telemarketing.
+% \newblock \emph{Decision Support Systems}, 62:22--31, 2014.
+
+% \bibitem{Pedregosa2011}
+% F.~Pedregosa et al.
+% \newblock Scikit-learn: Machine learning in Python.
+% \newblock \emph{Journal of Machine Learning Research}, 12:2825--2830, 2011.
 
 \end{thebibliography}
 
