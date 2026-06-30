@@ -63,9 +63,6 @@ mit geschachtelter Kreuzvalidierung evaluiert, wobei F1-Score und ROC-AUC als Ha
 \end{itemize}
 
 \section{Methoden}
-
-\textbf{Gliederung (ca. 2--3 Seiten). Ziel: Studierende im selben Semester sollen die Kernidee nachvollziehen können.}
-
 \subsection{Datenvorverarbeitung}
 \label{sec:preprocessing}
 
@@ -80,32 +77,29 @@ Die Transformation für das Modelltraining erfolgt nicht global, sondern ausschl
 Der Zufallsgenerator wird durchgängig mit \texttt{random\_state=42} fixiert.
 
 \subsection{Baseline-Klassifikatoren (Task 2)}
-\begin{itemize}
-	\item Kurze formale Beschreibung von Logistic Regression (Sigmoid + Cross-Entropy-Loss).
-	\item k-Nearest Neighbors (Distanzmaß, Mehrheitsentscheid, Wahl von k=5).
-	\item Naive Bayes (Unabhängigkeitsannahme zwischen Features; Limitation bei korrelierten Bank-Features).
-\end{itemize}
+
+Als Baseline-Verfahren werden drei klassische Klassifikatoren eingesetzt, die ohne aufwändige Hyperparameter-Optimierung eine erste Einordnung der Schwierigkeitsgrade der Datensätze ermöglichen und als Vergleichsmaßstab für die fortgeschrittenen Modelle dienen.
+
+\textbf{Logistic Regression} modelliert die Wahrscheinlichkeit der positiven Klasse als logistische Funktion einer Linearkombination der Eingabemerkmale. Es dient als einfache, gut interpretierbare lineare Referenz, an der sich die fortgeschritteneren, nichtlinearen Modelle messen lassen müssen. Da es als Baseline ohne Anspruch auf Optimalität dient, wird auf eine Hyperparameter-Suche verzichtet und mit den Standardeinstellungen trainiert.
+
+\textbf{Naive Bayes} wendet den Satz von Bayes unter der vereinfachenden Annahme an, dass alle Merkmale bedingt unabhängig von der Klasse sind. Im Gegensatz zur Logistic Regression trifft es eine starke probabilistische Modellannahme, die auf korrelierten Daten systematisch verletzt ist, was die Vorhersageleistung auf dem Bank-Marketing-Datensatz mit seinen kollinearen makroökonomischen Indikatoren direkt sichtbar macht. Auch hier wird ohne Hyperparameter-Suche mit Standardeinstellungen (Gaussian Naive Bayes) trainiert.
+
+\textbf{K-Nearest Neighbors} klassifiziert neue Datenpunkte anhand der Mehrheitsentscheidung der $k$ nächsten Trainingspunkte im Merkmalsraum und stellt damit als einziges der drei Baseline-Verfahren kein parametrisches Modell dar. Als distanzbasiertes Verfahren reagiert es sensitiv auf Merkmalsmaßstäbe, weshalb eine MinMax-Skalierung vorgeschaltet wird. Der Hyperparameter $k$ wurde im Bereich 1--31 (ungerade Werte) je Datensatz per Kreuzvalidierung optimiert, wobei sich deutlich unterschiedliche optimale Werte ergaben ($k=25$ für Telco, $k=27$ für Bank Marketing, $k=31$ für Online Shoppers Intention).
 
 \subsection{Fortgeschrittene Modelle (Task 3)}
 \label{sec:advanced-models}
-\begin{itemize}
-	\item Support Vector Machine: RBF-Kernel, Hyperparameter $C$ via GridSearchCV (Grid: $C \in \{0.01, 0.1, 1, 10\}$).
-	\item Multi-Layer Perceptron: Architektur-Suche über \texttt{hidden\_layer\_sizes} $\in \{(64,), (128,), (64,32), (128,64)\}$ und Regularisierung $\alpha$; Early Stopping.
-	\item Random Forest: Bagging von Entscheidungsbäumen, Hyperparameter \texttt{n\_estimators}, \texttt{max\_depth}, \texttt{max\_features}, \texttt{class\_weight=\textquotesingle balanced\textquotesingle} zur Behandlung des Klassenungleichgewichts.
-	\item Gradient Boosting: konstruiert ein additives Ensemble flacher Entscheidungsbäume,
-	die --- anders als beim Bagging des Random Forest --- sequentiell trainiert
-	werden: Jeder Baum approximiert den negativen Gradienten der logistischen
-	Verlustfunktion und korrigiert so die Fehler des bisherigen Modells, wodurch
-	Boosting primär den Bias statt der Varianz reduziert \cite{Friedman2001}. Wir
-	verwenden die histogramm-basierte, auf großen Datensätzen effiziente
-	Implementierung \texttt{HistGradientBoostingClassifier} \cite{Pedregosa2011} in
-	derselben leak-freien Pipeline wie die übrigen Modelle. Per \texttt{GridSearchCV}
-	optimiert werden \texttt{learning\_rate} $\in \{0.01, 0.05, 0.1\}$,
-	\texttt{max\_iter} $\in \{100, 200, 300\}$ und \texttt{max\_depth}
-	$\in \{5, 10, 15, None\}$, wobei Lernrate und Iterationszahl den zentralen
-	Regularisierungs-Kompromiss bilden.
-	\item \textbf{Wichtig:} Hier nur die Kernidee jedes Verfahrens kurz erläutern (kein vollständiges Tutorial) — Fokus auf das tatsächlich beste Modell (Random Forest) etwas ausführlicher beschreiben, da Aufgabe explizit das \emph{beste} Modell in ausreichendem Detail verlangt.
-\end{itemize}
+
+Die vier fortgeschrittenen Modelle werden, anders als die Baselines, mit geschachtelter Kreuzvalidierung und datensatzspezifischer Hyperparameter-Optimierung evaluiert. Sie decken drei unterschiedliche Modellklassen ab: kernbasierte Verfahren (SVM), neuronale Netze (MLP) sowie baumbasierte Ensemble-Methoden (Random Forest, Gradient Boosting).
+
+\textbf{Support Vector Machine} sucht mittels eines RBF-Kerns eine nichtlineare Trennfläche, die den Abstand (Margin) zwischen den Klassen maximiert. Es ist enthalten, weil es im Gegensatz zu den linearen Baseline-Verfahren nichtlineare Klassengrenzen abbilden kann, ohne eine separate Architektursuche zu benötigen. Optimiert wurde der Regularisierungsparameter $C$ über die Werte $\{0{,}01,\, 0{,}1,\, 1,\, 10\}$, der den Kompromiss zwischen maximaler Trennschärfe und Toleranz gegenüber Fehlklassifikationen steuert.
+
+\textbf{Multi-Layer Perceptron} ist ein mehrschichtiges neuronales Netz, das nichtlineare Entscheidungsgrenzen über eine Abfolge gewichteter, nichtlinear aktivierter Schichten lernt. Es dient als Vertreter neuronaler Verfahren und prüft, ob ein flexibler, nicht baumbasierter Funktionsapproximator die Ensemble-Modelle auf diesen tabellarischen Daten übertreffen kann. Optimiert wurden die Netzarchitektur (Schichtgrößen $\{(64), (128), (64,32), (128,64)\}$) sowie die Regularisierungsstärke; zusätzlich wird Early Stopping eingesetzt, um Overfitting zu vermeiden.
+
+Die beiden verbleibenden Modelle gehören zur Familie der baumbasierten Ensembles, verfolgen jedoch grundlegend unterschiedliche Strategien, um einzelne Bäume zu kombinieren.
+
+\textbf{Gradient Boosting} konstruiert ein additives Ensemble flacher Entscheidungsbäume, die, anders als beim Bagging des Random Forest, sequentiell trainiert werden: Jeder neue Baum approximiert den negativen Gradienten der Verlustfunktion und korrigiert so die Fehler des bisherigen Modells \cite{Friedman2001}. Es ist enthalten, weil dieser fehlerkorrigierende Mechanismus primär den Bias statt der Varianz reduziert und damit eine komplementäre Ensemble-Strategie zum Random Forest darstellt. Optimiert wurden die Lernrate ($\{0{,}01,\, 0{,}05,\, 0{,}1\}$), die Anzahl der Boosting-Iterationen ($\{100, 200, 300\}$) und die maximale Baumtiefe ($\{5, 10, 15,\,$unbegrenzt$\}$), wobei Lernrate und Iterationszahl den zentralen Regularisierungs-Kompromiss bilden.
+
+\textbf{Random Forest}, das im Experimentteil beste Modell, erweitert die Idee des Bagging von Entscheidungsbäumen um eine zusätzliche Zufallskomponente \cite{Breiman2001}: Jeder Baum wird auf einer Bootstrap-Stichprobe der Trainingsdaten trainiert, und an jedem Split wird nur eine zufällige Teilmenge der Merkmale betrachtet, wodurch die einzelnen Bäume dekorreliert werden. Die Mittelung vieler solcher dekorrelierter Bäume reduziert die Varianz des Ensembles deutlich, ohne den Bias der einzelnen Bäume wesentlich zu erhöhen, was den zentralen Vorteil gegenüber einem einzelnen, leicht überangepassten Entscheidungsbaum ausmacht. Die finale Vorhersage ergibt sich aus dem Mehrheitsvotum bzw. der gemittelten Klassenwahrscheinlichkeit über alle Bäume; eine klassenweise Gewichtung, die die seltenere Klasse stärker gewichtet, wirkt zusätzlich dem Klassenungleichgewicht in allen drei Datensätzen entgegen. Optimiert wurden die Anzahl der Bäume ($\{100, 200\}$), die maximale Baumtiefe ($\{10, 20,\,$unbegrenzt$\}$) und die Anzahl der pro Split betrachteten Merkmale (Quadratwurzel bzw. binärer Logarithmus der Gesamtzahl).
 
 \subsection{Modellauswahl und -bewertung}
 \label{sec:model-selection}
@@ -128,18 +122,16 @@ Lernkurven diagnostizieren das Generalisierungsverhalten, indem der F1-Score bei
 Die Konfusionsmatrix wird sowohl absolut als auch zeilennormiert dargestellt, um die klassenbedingte Precision-Recall-Charakteristik offenzulegen: Eine hohe Specificity bei moderatem Recall deutet auf ein konservatives Modell hin, das positive Vorhersagen nur bei hoher Sicherheit trifft und dafür echte Positivfälle verpasst. Ergänzend vergleicht die Misclassification-Analyse die mittleren Merkmalsausprägungen korrekt und falsch klassifizierter Instanzen. Features, deren Mittelwerte sich zwischen beiden Gruppen deutlich unterscheiden, weisen auf systematische, merkmalsgetriebene Fehlermuster hin --- das Modell irrt nicht zufällig, sondern an charakterisierbaren Stellen des Merkmalsraums. Diese Muster liefern Ansatzpunkte für eine gezielte Modellverbesserung oder Datenerweiterung.
 
 \section{Experimente}
-
-\textbf{Gliederung (ca. 2--3 Seiten). Ziel der Experimente in 1--2 Sätzen formulieren:} Vergleich der Vorhersagegüte von sieben Klassifikatoren über drei Kundendatensätze hinweg unter einheitlicher, leak-freier Methodik, gefolgt von vertiefter Analyse des besten Modells (Random Forest / Bank Marketing) zur Erklärung seines Verhaltens.
-
 \subsection{Daten}
 \label{sec:data}
 
 \begin{table}[ht]
 \centering
-\small
+\footnotesize
+\setlength{\tabcolsep}{3pt}
 \caption{Übersicht der drei verwendeten Datensätze. Alle weisen ein Klassenungleichgewicht auf; Bank Marketing hat die geringste Minorität (11,3\,\%).}
 \label{tab:datasets}
-\begin{tabular}{lcccccc}
+\begin{tabular}{lccccc}
 \hline
 Datensatz & Quelle & Zeilen & Features & Zielklasse & Minorität \\
 \hline
