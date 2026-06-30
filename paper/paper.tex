@@ -114,11 +114,6 @@ Zur Bewertung der in Abschnitt~3.2 und~3.3 eingeführten Klassifikatoren wird je
 
 Als Evaluierungsmetriken dienen F1-Score und ROC-AUC als primäre, Accuracy als sekundäre Kennzahl. Der F1-Score als harmonisches Mittel aus Precision und Recall balanciert beide Größen und ist bei unbalancierten Klassen aussagekräftiger als Accuracy, die bereits ein trivialer Majority-Klassifikator hoch erscheinen ließe --- im Bank-Datensatz beträgt der Minoritätsanteil lediglich 11,3\,\%. Der ROC-AUC misst die Trennfähigkeit über verschiedene Entscheidungsschwellen hinweg und ist damit schwellenunabhängig. \texttt{random\_state=42} wird in sämtlichen datenaufteilenden und modelltrainierenden Operationen fixiert, um Reproduzierbarkeit zu gewährleisten.
 
-\subsection{Implementierungsumgebung}
-\label{sec:implementation}
-
-Sämtliche Experimente laufen auf einem Intel Core i7-1165G7 (4\,Kerne, 2{,}80\,GHz, 16\,GB RAM) unter Python~3.13 mit scikit-learn~1.9.0, pandas~3.0.3 und numpy~2.4.6 als zentralen Bibliotheken; matplotlib~3.10.9 und seaborn~0.13.2 dienen der Visualisierung, shap~0.52.0 der SHAP-Berechnung. Sämtliche Abhängigkeiten sind in \texttt{requirements.txt} mit gepinnten Versionen hinterlegt; zusammen mit \texttt{random\_state=42} in allen datenaufteilenden und modelltrainierenden Operationen (Abschnitt~3.4) ist die Reproduzierbarkeit aller Ergebnisse gewährleistet.
-
 \subsection{Modellanalyse-Framework (Task 4)}
 \begin{itemize}
 	\item \textbf{Motivation:} Reine Vorhersagegüte reicht für das Verständnis des Modells nicht aus --- das beste Modell (Random Forest / Bank Marketing) wird auf sechs Dimensionen vertieft analysiert, um Interpretierbarkeit, Generalisierungsverhalten und Fehlermuster zu bewerten.
