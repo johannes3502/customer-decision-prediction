@@ -227,3 +227,19 @@ __marimo__/
 .audit/
 
 vorlesung
+
+# LaTeX build artifacts
+paper/*.aux
+paper/*.fdb_latexmk
+paper/*.fls
+paper/*.synctex.gz
+paper/*.toc
+paper/*.log
+paper/*.out
+paper/*.bbl
+paper/*.blg
+paper/*.bcf
+paper/*.run.xml
+
+# Personal task notes
+paper/JOHANNES_AUFGABEN.md
