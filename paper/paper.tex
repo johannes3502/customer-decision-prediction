@@ -66,11 +66,18 @@ mit geschachtelter Kreuzvalidierung evaluiert, wobei F1-Score und ROC-AUC als Ha
 
 \textbf{Gliederung (ca. 2--3 Seiten). Ziel: Studierende im selben Semester sollen die Kernidee nachvollziehen können.}
 
-\subsection{Datenvorverarbeitung (Pipeline)}
-\begin{itemize}
-	\item 7-stufige Preprocessing-Pipeline (\texttt{src/utils/preprocess.py}): Duplikate entfernen, Spaltennamen normalisieren, Strings trimmen, Platzhalter (unknown, ?, 999) $\to$ NaN, numerische Spalten coercen, Imputation (Median/Modus), Zielvariable binär kodieren.
-	\item Leak-freie Transformation: \texttt{ColumnTransformer} (StandardScaler für numerische, OneHotEncoder für kategoriale Merkmale) ausschließlich innerhalb von \texttt{Pipeline}-Objekten, gefittet nur auf Trainingsfolds.
-\end{itemize}
+\subsection{Datenvorverarbeitung}
+\label{sec:preprocessing}
+
+Die drei Datensätze liegen in heterogenen Rohformaten mit gemischten Datentypen, domänenspezifischen Platzhaltern und unterschiedlichen Trennzeichen vor. Um eine reproduzierbare Vergleichsbasis zu schaffen, durchlaufen alle Datensätze eine identische Vorverarbeitungspipeline, die mit der Entfernung exakter Duplikate beginnt (22~Zeilen in Telco, 12 in Bank, 125 in Ecom). Spaltennamen werden vereinheitlicht, indem Leerzeichen und Schrägstriche durch Unterstriche ersetzt und Mehrfachunterstriche kollabiert werden; führende und nachfolgende Leerzeichen in String-Zellen werden bereinigt.
+
+Nach der strukturellen Bereinigung erfolgt die Behandlung fehlender Werte. Die generischen Platzhalter \texttt{unknown}, \texttt{nonexistent}, \texttt{?} sowie leere Strings werden datensatzübergreifend durch \texttt{NaN} ersetzt. Der Wert \texttt{999} wird spaltenspezifisch ersetzt, da er kontextabhängig einen fehlenden Wert (Bank: 39.673\,Einträge in \texttt{pdays}) oder einen gültigen Messwert codiert. Die Spalte \texttt{default} im Bank-Datensatz enthält 8.597~\texttt{unknown}-Einträge.
+
+Objektspalten, deren nicht-leere Werte zu mindestens 95\,\% in Zahlen umwandelbar sind, werden in einen numerischen Typ konvertiert; die Zielvariable ist ausgeschlossen. Verbleibende Fehlwerte werden imputiert: numerische Spalten erhalten den Median, kategoriale den Modus. Die Zielvariable wird abschließend über explizite Mapping-Tabellen binär kodiert (\texttt{0}/\texttt{1}).
+
+Die Transformation für das Modelltraining erfolgt nicht global, sondern ausschließlich innerhalb von \texttt{Pipeline}-Objekten der Evaluierungsskripte. Numerische Merkmale werden mit \texttt{StandardScaler} standardisiert, kategoriale per \texttt{OneHotEncoder} (\texttt{handle\_unknown='ignore'}) One-Hot-kodiert; ein \texttt{ColumnTransformer} bettet beide als Preprocessing-Schritt in jede Modell-Pipeline ein. \texttt{fit()} wird nur auf den Trainingsfolds aufgerufen; Testdaten werden ausschließlich transformiert. Diese Trennung verhindert Data Leakage, das bei globaler Skalierung oder Kodierung vor der Aufteilung in Trainings- und Testdaten zu optimistisch verzerrten Evaluationsergebnissen führen würde.
+
+Der Zufallsgenerator wird durchgängig mit \texttt{random\_state=42} fixiert.
 
 \subsection{Baseline-Klassifikatoren (Task 2)}
 \begin{itemize}
@@ -101,22 +108,23 @@ mit geschachtelter Kreuzvalidierung evaluiert, wobei F1-Score und ROC-AUC als Ha
 \end{itemize}
 
 \subsection{Modellauswahl und -bewertung}
-\begin{itemize}
-	\item Geschachtelte Kreuzvalidierung (nested CV): inneres Loop für Hyperparameter-Tuning (GridSearchCV, Scoring meist \texttt{roc\_auc}), äußeres Loop für unverzerrte Generalisierungsschätzung.
-	\item \texttt{StratifiedKFold} (5 Folds) für Telco/Ecom; \texttt{TimeSeriesSplit} für Bank Marketing wegen zeitlicher Reihenfolge der Daten (Vermeidung von Look-Ahead-Bias / Concept Drift).
-	\item Random Seed 42 durchgängig für Reproduzierbarkeit.
-\end{itemize}
+\label{sec:model-selection}
+
+Zur Bewertung der in Abschnitt~3.2 und~3.3 eingeführten Klassifikatoren wird jeder Datensatz in einen Trainings- (80\,\%) und einen Testanteil (20\,\%) aufgeteilt. Für Telco und Ecom erfolgt die Aufteilung stratifiziert über \texttt{train\_test\_split}, für Bank temporal an einem fixen Index, da die zeitlich geordneten makroökonomischen Merkmale einen Look-Ahead-Bias riskieren. Die Generalisierungsleistung aller sieben Modelle wird einheitlich mittels 5-facher Kreuzvalidierung auf dem Trainingsanteil geschätzt: \texttt{StratifiedKFold} ($k=5$) für Telco und Ecom erhält die Klassenverteilung pro Fold, \texttt{TimeSeriesSplit} ($k=5$) für Bank respektiert die zeitliche Ordnung. Für die fortgeschrittenen Modelle, deren Hyperparameter optimiert werden, kommt eine geschachtelte Kreuzvalidierung zum Einsatz: Ein innerer \texttt{GridSearchCV}-Loop bewertet Kandidaten anhand von \texttt{roc\_auc}, während ein äußerer Loop eine unverzerrte Schätzung der Generalisierungsfähigkeit liefert --- die äußeren Testdaten werden weder für Training noch für Tuning verwendet.
+
+Als Evaluierungsmetriken dienen F1-Score und ROC-AUC als primäre, Accuracy als sekundäre Kennzahl. Der F1-Score als harmonisches Mittel aus Precision und Recall balanciert beide Größen und ist bei unbalancierten Klassen aussagekräftiger als Accuracy, die bereits ein trivialer Majority-Klassifikator hoch erscheinen ließe --- im Bank-Datensatz beträgt der Minoritätsanteil lediglich 11,3\,\%. Der ROC-AUC misst die Trennfähigkeit über verschiedene Entscheidungsschwellen hinweg und ist damit schwellenunabhängig. \texttt{random\_state=42} wird in sämtlichen datenaufteilenden und modelltrainierenden Operationen fixiert, um Reproduzierbarkeit zu gewährleisten.
 
 \subsection{Modellanalyse-Framework (Task 4)}
 \begin{itemize}
-	\item \texttt{model\_analysis.py}: 16 modell-agnostische Funktionen (8 Berechnung + 8 Plot) für das beste Modell.
-	\item Kurze methodische Erläuterung der wichtigsten Verfahren, die im Experiments-Teil verwendet werden:
+	\item \textbf{Motivation:} Reine Vorhersagegüte reicht für das Verständnis des Modells nicht aus --- das beste Modell (Random Forest / Bank Marketing) wird auf sechs Dimensionen vertieft analysiert, um Interpretierbarkeit, Generalisierungsverhalten und Fehlermuster zu bewerten.
+	\item \texttt{model\_analysis.py}: 16 modell-agnostische Funktionen (8 Berechnung + 8 Plot) für das beste Modell, ausgeführt via \texttt{run\_analysis.py}.
+	\item Kurze methodische Erläuterung der Analyse-Verfahren:
 	\begin{itemize}
-		\item Permutation Importance: Verschlechterung der Score-Metrik (F1) bei zufälliger Permutation einzelner Features.
-		\item SHAP (TreeExplainer): additive, spieltheoretisch fundierte Erklärung einzelner Vorhersagen; Summary-Plot (global) und Dependence-Plots (Top-3-Features).
-		\item Lernkurven: Trainings- vs. Validierungs-F1 über wachsende Trainingsgröße zur Diagnose von Bias/Variance.
-		\item Hyperparameter-Sensitivitätsanalyse: CV-Score als Funktion einzelner Hyperparameter (z.\,B. \texttt{n\_estimators}, \texttt{max\_depth}).
-		\item Konfusionsmatrix-Analyse (absolut + normiert) und Misclassification-Pattern-Analyse (Feature-Mittelwerte: korrekt vs. falsch klassifiziert).
+		\item \textbf{Permutation Importance} (Breiman, 2001): Feature-Werte werden zufällig permutiert; die Verschlechterung der Metrik (F1) misst die Wichtigkeit. Globales, modell-agnostisches Maß. Output: Balkendiagramm der Top-15 Features.
+		\item \textbf{SHAP --- SHapley Additive exPlanations} (Lundberg \& Lee, 2017): Shapley-Werte aus der kooperativen Spieltheorie. Jedes Feature erhält einen additiven Beitrag zu jeder einzelnen Vorhersage (Summe aller SHAP-Werte + Baseline = Modellvorhersage). \texttt{TreeExplainer} für effiziente Berechnung bei baumbasierten Modellen. Output: Summary-Plot (Beeswarm, globale Wichtigkeit + Richtung) und Dependence-Plots (Top-5 Features). \textbf{Methodische Limitation:} Bei Multikollinearität (z.\,B. \texttt{emp.var.rate} vs. \texttt{euribor3m}, $r=0{,}97$) teilen sich korrelierte Features die SHAP-Werte --- die Importance ist konservativ und nicht kausal interpretierbar.
+		\item \textbf{Lernkurven:} Trainings- vs. Validierungs-F1 über wachsende Trainingsgröße zur Diagnose von Bias vs. Varianz (Overfitting-Signal).
+		\item \textbf{Hyperparameter-Sensitivitätsanalyse:} CV-Score als Funktion einzelner Hyperparameter (\texttt{n\_estimators}, \texttt{max\_depth}) zur Bewertung der Modell-Robustheit.
+		\item \textbf{Konfusionsmatrix-Analyse} (absolut + normiert) und \textbf{Misclassification-Pattern-Analyse} (Feature-Mittelwerte: korrekt vs. falsch klassifiziert) zur Identifikation systematischer Fehlermuster.
 	\end{itemize}
 \end{itemize}
 
@@ -125,11 +133,30 @@ mit geschachtelter Kreuzvalidierung evaluiert, wobei F1-Score und ROC-AUC als Ha
 \textbf{Gliederung (ca. 2--3 Seiten). Ziel der Experimente in 1--2 Sätzen formulieren:} Vergleich der Vorhersagegüte von sieben Klassifikatoren über drei Kundendatensätze hinweg unter einheitlicher, leak-freier Methodik, gefolgt von vertiefter Analyse des besten Modells (Random Forest / Bank Marketing) zur Erklärung seines Verhaltens.
 
 \subsection{Daten}
+\label{sec:data}
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Übersicht der drei verwendeten Datensätze. Alle weisen ein Klassenungleichgewicht auf; Bank Marketing hat die geringste Minorität (11,3\,\%).}
+\label{tab:datasets}
+\begin{tabular}{lcccccc}
+\hline
+Datensatz & Quelle & Zeilen & Features & Zielklasse & Minorität \\
+\hline
+Telco Customer Churn & Kaggle/IBM & 7.043 & 20 & Churn & 26,5\,\% \\
+Bank Marketing & UCI (Moro et al., 2014) & 41.188 & 21 & Term Deposit & 11,3\,\% \\
+Online Shoppers Intention & UCI & 12.330 & 18 & Revenue & 15,5\,\% \\
+\hline
+\end{tabular}
+\end{table}
+
 \begin{itemize}
-	\item Drei Datensätze (Tabelle): Telco Customer Churn (7.043 Zeilen, 20 Features, Zielklasse Churn, Minorität 26.5\,\%), Bank Marketing (41.188 Zeilen, 21 Features, Zielklasse Term Deposit, Minorität 11.3\,\%), Online Shoppers Intention (12.330 Zeilen, 18 Features, Zielklasse Revenue, Minorität 15.5\,\%).
-	\item Quellen: Telco (Kaggle/IBM), Bank Marketing (UCI), Online Shoppers Intention (UCI).
-	\item Kurze EDA-Befunde je Datensatz (aus \texttt{reports/eda\_report.txt}): fehlende Werte/Platzhalter (z.\,B. unknown bei Bank-Job/Education, 999 bei pdays), Duplikate (Telco: 22, Bank: 12, Ecom: 125), starke Feature-Korrelationen bei Bank (emp.var.rate/euribor3m r=0.97), Klassenungleichgewicht in allen drei Datensätzen.
-	\item Begründung F1/ROC-AUC statt Accuracy aufgrund Klassenungleichgewicht.
+	\item Tabelle der drei Datensätze (siehe Tabelle~\ref{tab:datasets}).
+	\item \textbf{Telco Customer Churn} (Kaggle/IBM, 7.043 Zeilen, 20 Features): Zielklasse \texttt{Churn}, Minorität 26,5\,\%. Fehlende Werte: \texttt{TotalCharges} (11 Zeilen). Duplikate: 22.
+	\item \textbf{Bank Marketing} (UCI, Moro et al., 2014, 41.188 Zeilen, 21 Features): Zielklasse \texttt{Term Deposit}, Minorität 11,3\,\%. \textbf{Platzhalter-Problematik:} \texttt{job} (330$\times$ \texttt{unknown}), \texttt{education} (1.731$\times$), \texttt{default} (8.597$\times$), \texttt{pdays} (39.673$\times$ \texttt{999}). \textbf{Kollinearität:} \texttt{emp.var.rate} vs. \texttt{euribor3m} ($r=0{,}97$) --- relevant für die Interpretation der Feature-Importance in Abschnitt~\ref{sec:detailed-analysis}. Duplikate: 12.
+	\item \textbf{Online Shoppers Intention} (UCI, 12.330 Zeilen, 18 Features): Zielklasse \texttt{Revenue}, Minorität 15,5\,\%. Platzhalter: \texttt{ProductRelated\_Duration} (3$\times$ \texttt{999}). Duplikate: 125.
+	\item Metrik-Wahl: F1-Score und ROC-AUC als primäre Metriken statt Accuracy aufgrund des durchgängigen Klassenungleichgewichts in allen drei Datensätzen (vgl. Abschnitt~\ref{sec:model-selection}).
 \end{itemize}
 
 \subsection{Versuchsaufbau}
@@ -190,27 +217,47 @@ Ecom  & random   & $0.932 \pm 0.005$ & 0.935 & 0.658 \\
 \end{tabular}
 \end{table}
 
-\paragraph{Detaillierte Analyse des besten Modells (Random Forest / Bank Marketing) — Modellanalyse Task 4.}
+\paragraph{Detaillierte Analyse des besten Modells (Random Forest / Bank Marketing) --- Modellanalyse Task 4.}
+\label{sec:detailed-analysis}
+
+Das beste Modell (Random Forest auf Bank Marketing, ROC-AUC 0,943) wird auf sechs Dimensionen vertieft analysiert. Ziel ist nicht nur die Bewertung der Vorhersagegüte, sondern das Verständnis von Feature-Wichtigkeit, Generalisierungsverhalten und Fehlermustern.
+
+\subparagraph{Modellleistung und Permutation Importance.}
 \begin{itemize}
-	\item Testergebnisse des finalen Modells: F1=0.576--0.648, ROC-AUC=0.911--0.914, Precision $\approx$0.54--0.66, Recall $\approx$0.51--0.81 (abhängig von Schwellenwert/Run), Specificity $\approx$0.95 (Quelle: \texttt{reports/results/analysis\_results.csv}).
-	\item Permutation Importance (Abb. \texttt{permutation\_imp\_bank\_random\_forest.png}): \emph{duration} dominantes Feature (Importance $\approx$0.23--0.24), konsistent mit EDA-Korrelation (r=0.405 mit Zielvariable).
-	\item SHAP-Analyse (Abb. \texttt{shap\_summary\_bank\_random\_forest.png} + Dependence-Plots für duration, emp.var.rate, euribor3m, nr.employed, poutcome): bestätigt globale Wichtigkeit, liefert zusätzlich lokale Interpretierbarkeit; Diskussion der Kollinearität ökonomischer Indikatoren (emp.var.rate vs. euribor3m, r=0.97) als Limitation von Permutation/SHAP unter Multikollinearität.
-	\item Lernkurven (Abb. \texttt{learning\_curve\_bank\_random\_forest.png}): großer Bias-Variance-Gap ($\approx$0.45; Trainings-Accuracy 1.000 vs. Validierungs-Accuracy $\approx$0.91) $\to$ deutliches Overfitting trotz \texttt{class\_weight='balanced'} und \texttt{max\_depth=20}.
-	\item Hyperparameter-Sensitivität (Abb. \texttt{sensitivity\_n\_estimators\_...}, \texttt{sensitivity\_max\_depth\_...}): CV-Score-Verlauf über \texttt{n\_estimators} $\in\{10,...,500\}$ und \texttt{max\_depth} $\in\{3,...,20,None\}$; Plateau-Effekt ab gewissem Punkt, sinkender Nutzen weiterer Bäume/Tiefe.
-	\item Konfusionsmatrix (Abb. \texttt{confusion\_bank\_random\_forest.png}): hohe Recall/niedrige Precision-Charakteristik — Modell findet die meisten tatsächlichen Abschlüsse, produziert aber viele False Positives.
-	\item Misclassification-Pattern (Abb. \texttt{misclass\_diff\_bank\_random\_forest.png}): fehlklassifizierte Fälle unterscheiden sich systematisch v.\,a. bei \emph{duration} und ökonomischen Indikatoren $\to$ Modell schwach an Entscheidungsgrenze.
+	\item \textbf{Testergebnisse des finalen Modells} (Quelle: \texttt{reports/results/analysis\_results.csv}): ROC-AUC 0,912, F1 0,576, Precision 0,664, Recall 0,508, Specificity 0,949. Interpretation: ROC-AUC von 0,91 zeigt gute Trennfähigkeit; der moderate F1 spiegelt das Klassenungleichgewicht wider. Hohe Specificity bei moderatem Recall $\to$ das Modell ist konservativ bei der Vorhersage der positiven Klasse.
+	\item \textbf{Permutation Importance:} \emph{duration} dominantes Feature (Importance 0,232), gefolgt von \texttt{emp.var.rate}, \texttt{euribor3m}, \texttt{nr.employed}, \texttt{poutcome}. Konsistent mit EDA: \texttt{duration} korreliert mit der Zielvariable ($r=0{,}405$). \textbf{Wichtig:} \texttt{duration} (Gesprächsdauer) ist nur post-hoc verfügbar --- für prospektive Vorhersagen vor einem Kundenkontakt nicht nutzbar, aber aufschlussreich für das Verständnis des Entscheidungsprozesses.
+\end{itemize}
+
+\subparagraph{SHAP-Analyse.}
+\begin{itemize}
+	\item \textbf{Summary-Plot:} SHAP bestätigt die globale Wichtigkeit von \texttt{duration}, liefert aber zusätzlich die Richtung des Einflusses (positive/negative SHAP-Werte) und lokale Erklärungen pro Instanz. Längere \texttt{duration} $\to$ höhere Wahrscheinlichkeit für Term Deposit.
+	\item \textbf{Dependence-Plots:} Zeigen den Zusammenhang zwischen Feature-Wert und SHAP-Wert für die Top-5 Features (\texttt{duration}, \texttt{emp.var.rate}, \texttt{euribor3m}, \texttt{nr.employed}, \texttt{poutcome}).
+	\item \textbf{Kollinearität als methodische Limitation:} \texttt{emp.var.rate} und \texttt{euribor3m} sind hoch korreliert ($r=0{,}97$, vgl. Abschnitt~\ref{sec:data}). Bei SHAP und Permutation Importance werden beide als wichtig ausgewiesen --- aber die Importance teilt sich zwischen kollinearen Features auf. Die SHAP-Werte sind deskriptiv, nicht kausal zu interpretieren. Dies ist eine bekannte Einschränkung von Shapley-basierten Verfahren unter Multikollinearität, kein Fehler des Modells.
+\end{itemize}
+
+\subparagraph{Lernkurven und Hyperparameter-Sensitivität.}
+\begin{itemize}
+	\item \textbf{Lernkurven:} Bias-Variance-Gap von 0,64 (F1-Differenz zwischen Trainings- und Validierungsleistung). Trainings-Accuracy $\approx$1,00 vs. Validierungs-Accuracy $\approx$0,91 $\to$ das Modell zeigt Anzeichen von Overfitting, was bei Random Forests auf Datensätzen dieser Größe zu erwarten ist. Die hohe Test-ROC-AUC (0,91) belegt, dass das Modell dennoch gut generalisiert. Weitere Daten oder stärkere Regularisierung könnten die Generalisierung verbessern.
+	\item \textbf{Hyperparameter-Sensitivität:} \texttt{n\_estimators}: Plateau-Effekt ab $\approx$200 Bäume --- weitere Bäume bringen kaum Verbesserung. \texttt{max\_depth}: Tiefe $>$10 bringt marginalen Gewinn, erhöht aber das Overfitting-Risiko. Das Modell kann ohne signifikanten Performance-Verlust vereinfacht werden.
+\end{itemize}
+
+\subparagraph{Fehleranalyse.}
+\begin{itemize}
+	\item \textbf{Konfusionsmatrix:} Specificity 0,949, Recall 0,508. Das Modell findet etwa die Hälfte der tatsächlichen Term Deposits (Recall), produziert aber wenige False Positives. Geschäftsrelevanz: False Positives = unnötige Anrufe, False Negatives = verpasste Abschlüsse --- je nach Kostenstruktur kann der Entscheidungsschwellenwert angepasst werden.
+	\item \textbf{Misclassification-Pattern:} Fehlklassifizierte Instanzen unterscheiden sich systematisch bei \texttt{duration} und den ökonomischen Indikatoren $\to$ das Modell ist insbesondere an der Entscheidungsgrenze (Fälle mit mittleren \texttt{duration}-Werten) unsicher.
 \end{itemize}
 
 \paragraph{Vergleich mit Literatur.} Einordnung der erreichten ROC-AUC-Werte (Bank $\approx$0.94) im Vergleich zu publizierten Resultaten auf dem UCI-Bank-Marketing-Datensatz; Diskussion möglicher Abweichungen (Preprocessing-Unterschiede, Wahl von TimeSeriesSplit statt zufälliger Split).
 
 \paragraph{Limitationen (aus bestehender Discussion in \texttt{model\_analysis.ipynb} übernehmen und ausbauen).}
 \begin{itemize}
+	\item \textbf{\texttt{duration} nur post-hoc verfügbar:} \texttt{duration} (Gesprächsdauer) ist das mit Abstand wichtigste Feature, aber erst nach dem Kundenkontakt bekannt. Für prospektive Vorhersagen vor einem Anruf ist das Feature nicht verfügbar --- dies schränkt die praktische Anwendbarkeit des Modells für Targeting-Zwecke ein. Ein Modell ohne \texttt{duration} wäre für die Praxis relevanter, würde aber voraussichtlich niedrigere Vorhersagegüte aufweisen. Das Feature ist dennoch aufschlussreich für das Verständnis der Entscheidungsmechanismen.
+	\item \textbf{Kollinearität und Feature-Importance:} \texttt{emp.var.rate} und \texttt{euribor3m} sind hoch korreliert ($r=0{,}97$). SHAP und Permutation Importance weisen beide als wichtig aus, können aber Kausalität nicht von Korrelation trennen --- die Importance teilt sich zwischen kollinearen Features auf und ist daher konservativ.
 	\item Modellanalyse nur für einen Datensatz/ein Modell (Bank/Random Forest) durchgeführt; Telco und Ecom nicht vertieft analysiert.
-	\item Temporale Generalisierung: ökonomische Indikatoren ändern sich über Zeit; TimeSeriesSplit verwendet, aber Modell könnte bei Wirtschaftslageänderung degradieren.
-	\item SHAP nur auf 200 Testsamples berechnet (Rechenaufwand) $\to$ mögliche Instabilität der Dependence-Plots.
+	\item SHAP nur auf 200 Testsamples berechnet (Rechenaufwand) $\to$ mögliche Instabilität der Dependence-Plots, insbesondere bei seltenen Feature-Wert-Bereichen.
 	\item Klassenungleichgewicht trotz \texttt{class\_weight='balanced'} weiterhin Herausforderung; SMOTE/Threshold-Tuning/Cost-Sensitive Learning nicht erprobt.
 	\item Sensitivitätsanalyse nur für \texttt{n\_estimators}/\texttt{max\_depth}; weitere Parameter (\texttt{min\_samples\_leaf}, \texttt{min\_samples\_split}, \texttt{max\_features}) nicht untersucht.
-	\item \emph{duration} praktisch nur post-hoc verfügbar (erst nach Anruf bekannt) $\to$ Einschränkung der praktischen Nutzbarkeit für prospektives Targeting.
+	\item Bank-Datensatz zeitlich begrenzt (2008--2010); wirtschaftliche Veränderungen (Concept Drift) können die Vorhersagekraft des Modells beeinflussen --- \texttt{TimeSeriesSplit} adressiert dies methodisch, kann aber zukünftige Drifts nicht antizipieren.
 \end{itemize}
 
 \paragraph{Breitere Implikationen.} Geschäftsrelevanz der Precision/Recall-Charakteristik (Kosten von False Positives [unnötige Anrufe] vs.\ False Negatives [verpasste Abschlüsse]); Hinweis auf mögliche Schwellenwert-Anpassung je Geschäftsszenario.
