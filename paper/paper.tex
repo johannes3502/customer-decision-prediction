@@ -8,6 +8,7 @@
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{float}
+\usepackage{graphicx}
 %\usepackage{refcheck}
 \usepackage[colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue]{hyperref}
 \setkomafont{author}{\small}
@@ -33,7 +34,7 @@
 \noindent
 \textbf{Abstrakt:}
 In dieser Arbeit handelt es sich um die binäre Klassifikation von Kundenentscheidungen auf tabellarischen Geschäftsdaten, nämlich die Vorhersage von Kündigung, Vertragsabschluss und Kaufabsicht. Die zentrale Herausforderung besteht darin, dass solche Datensätze typischerweise stark unbalancierte Klassen haben, was konventionelle Evaluationsmetriken wie Accuracy irreführend macht und die Modellwahl 
-etwas erschwert. Der gewählte Ansatz umfasst einen systematischen Vergleich von sieben Klassifikationsverfahren — Logistic Regression, k-Nearest Neighbors, Naive Bayes, Support Vector Machine, Multi-Layer Perceptron, Random Forest und Gradient Boosting — auf drei öffentlich verfügbaren Datensätzen. Alle Modelle werden in einer leak-freien Preprocessing-Pipeline mit geschachtelter 
+etwas erschwert. Der gewählte Ansatz umfasst einen systematischen Vergleich von sieben Klassifikationsverfahren (Logistic Regression, k-Nearest Neighbors, Naive Bayes, Support Vector Machine, Multi-Layer Perceptron, Random Forest und Gradient Boosting) auf drei öffentlich verfügbaren Datensätzen. Alle Modelle werden in einer leak-freien Preprocessing-Pipeline mit geschachtelter 
 Kreuzvalidierung evaluiert, wobei F1-Score und ROC-AUC als Hauptmetriken dienen. Hier wurde es anhand der Ergebnisse gezeigt, dass ensemble-basierte Verfahren durchgehend die höchste Vorhersagegüte erzielen aber gleichzeitig eine erhöhte Anfälligkeit für Overfitting aufweisen. Eine ergänzende Modellanalyse mittels Permutation Importance, SHAP-Werten und Lernkurven verdeutlicht darüber hinaus, dass 
 einzelne dominante Merkmale sowie starke Feature-Korrelationen die Interpretierbarkeit der Modelle erheblich einschränken können.
 \end{abstract}
@@ -51,8 +52,8 @@ sondern auch um die Interpretierbarkeit der Modelle und die Robustheit der Evalu
 Die Relevanz dieser Fragestellung ergibt sich aus zwei Faktoren. Erstens ist die Wahl des Klassifikationsverfahrens in der Praxis häufig nicht trivial, d.h. unterschiedliche Modelle reagieren unterschiedlich auf Klassenverteilung und die Dimensionalität der Daten, sodass ein einzelner Datensatz oder eine einzelne Metrik kein vollständiges Bild liefert. Zweitens können fehlerhafte Evaluationsstrategien 
 wie Data Leakage durch Preprocessing oder die Verwendung von Accuracy bei unbalancierten Klassen zu verzerrten Ergebnissen führen, die in der Praxis falsche Entscheidungen nach sich ziehen. Ein systematischer Vergleich unterschiedlicher Verfahren auf mehreren Datensätzen adressiert hierbei beide Probleme.
 
-Vergleichende Studien zu Klassifikationsverfahren auf tabellarischen Geschäftsdaten sind in der Literatur breit vertreten. Arbeiten wie die von Fernández-Delgado et al.\cite{FernandezDelgado2014} untersuchen eine Vielzahl von Klassifikatoren auf zahlreichen Datensätzen und liefern wertvolle Orientierung bei der Modellwahl. Währenddessen stimmen datensatzspezifische Studien z. B. zur Vorhersage von Kundenabwanderung\cite{Ahmad2019} 
-oder Kaufverhalten\cite{Sakar2019}, einzelne Verfahren gezielt auf bestimmte Anwendungskontexte ab. Die vorliegende Arbeit verfolgt einen ergänzenden Ansatz, indem sie einen einheitlichen methodischen Rahmen über mehrere Datensätze und Modelle hinweg anlegt. Daneben werden Aspekte wie Interpretierbarkeit, Generalisierungsverhalten und den Einfluss von Klassenungleichgewicht auch systematisch berücksichtigt.
+Vergleichende Studien zu Klassifikationsverfahren auf tabellarischen Geschäftsdaten sind in der Literatur breit vertreten. Arbeiten wie die von Fernández-Delgado et al.\ \cite{FernandezDelgado2014} untersuchen eine Vielzahl von Klassifikatoren auf zahlreichen Datensätzen und liefern wertvolle Orientierung bei der Modellwahl. Währenddessen stimmen datensatzspezifische Studien z. B. zur Vorhersage von Kundenabwanderung \cite{Ahmad2019}
+oder Kaufverhalten \cite{Sakar2019}, einzelne Verfahren gezielt auf bestimmte Anwendungskontexte ab. Die vorliegende Arbeit verfolgt einen ergänzenden Ansatz, indem sie einen einheitlichen methodischen Rahmen über mehrere Datensätze und Modelle hinweg anlegt. Daneben werden Aspekte wie Interpretierbarkeit, Generalisierungsverhalten und den Einfluss von Klassenungleichgewicht auch systematisch berücksichtigt.
 
 Diese Arbeit leistet einen Beitrag, indem sie sieben Klassifikationsverfahren: Logistic Regression, k-Nearest Neighbors, Naive Bayes, Support Vector Machine, Multi-Layer Perceptron, Random Forest und Gradient Boosting, auf drei öffentlich verfügbaren Datensätzen (Telco Customer Churn, Bank Marketing, Online Shoppers Intention) vergleicht. Alle Modelle werden in einer einheitlichen, leak-freien Preprocessing-Pipeline 
 mit geschachtelter Kreuzvalidierung evaluiert, wobei F1-Score und ROC-AUC als Hauptmetriken dienen. Über den reinen Modellvergleich hinaus umfasst die Analyse Lernkurven, Hyperparameter-Sensitivitätsanalysen, etc. , um nicht nur die Vorhersagegüte, sondern auch die Interpretierbarkeit und das Generalisierungsverhalten der Modelle zu bewerten.
@@ -73,8 +74,10 @@ erwiesen haben. Ahmad et al.\ \cite{Ahmad2019} zeigten dies auf einer Big-Data-P
 Ensemble-Methoden die höchste Vorhersagegüte erreichten. Neuere Studien ergänzen den Fokus um
 Klassenungleichgewicht und Interpretierbarkeit: El~Attar und El-Hajj \cite{ElAttar2026}
 verglichen auf demselben Telco-Datensatz sieben Klassifikatoren mit SMOTE-Oversampling,
-erzielten mit Gradient Boosting einen ROC-AUC von 0{,}932 und identifizierten per SHAP
-Vertragstyp, Laufzeit und technischen Support als stärkste Prädiktoren.
+erzielten mit XGBoost das beste Ergebnis (ROC-AUC 0{,}932, dicht gefolgt von Gradient
+Boosting mit 0{,}926) und identifizierten per SHAP Vertragstyp, Vertragslaufzeit und
+Zahlungsmethode als stärkste Prädiktoren, während technischer Support und
+Service-Bündelung als ergänzende Einflussfaktoren auftraten.
 
 Der Bank-Marketing-Datensatz hat sich als Standard-Benchmark für die Vorhersage von
 Festgeldabschlüssen etabliert. Moro et al.\ \cite{Moro2014} stellten ihn vor und wiesen die
@@ -85,7 +88,7 @@ bestätigten auf demselben Datensatz die Überlegenheit von Ensemble-Verfahren, 
 rund 92\,\% die höchste Accuracy erreichte. Für die Kaufabsicht im Online-Handel stammt der von
 uns genutzte Datensatz von Sakar et al.\ \cite{Sakar2019}, die Random Forest, SVM und ein MLP
 auf Session- und Clickstream-Merkmalen verglichen; das MLP schnitt am besten ab, und das aus
-E-Commerce-Metriken abgeleitete Merkmal \texttt{PageValues} erwies sich als stärkster Prädiktor.
+E-Commerce-Metriken abgeleitete Merkmal des mittleren Seitenwerts (PageValues) erwies sich als stärkster Prädiktor.
 
 Aus methodischer Sicht prägen zwei Aspekte die Evaluation solcher Modelle. Zum einen erfordert
 das durchgängige Klassenungleichgewicht einen bewussten Umgang mit Resampling-Verfahren und
@@ -123,11 +126,11 @@ Die Transformation für das Modelltraining erfolgt ausschließlich innerhalb der
 
 Als Baseline-Verfahren werden drei klassische Klassifikatoren eingesetzt, die ohne aufwändige Hyperparameter-Optimierung eine erste Einordnung der Schwierigkeitsgrade der Datensätze ermöglichen und als Vergleichsmaßstab für die fortgeschrittenen Modelle dienen.
 
-\textbf{Logistic Regression} modelliert die Wahrscheinlichkeit der positiven Klasse als logistische Funktion einer Linearkombination der Eingabemerkmale. Es dient als einfache, gut interpretierbare lineare Referenz, an der sich die fortgeschritteneren, nichtlinearen Modelle messen lassen müssen. Der Regularisierungsparameter $C$ wurde per Grid-Search über Kreuzvalidierung optimiert, wobei sich datensatzspezifisch $C=10$ für Telco und Online Shoppers Intention sowie $C=1$ für Bank Marketing als beste Werte ergaben.
+\textbf{Logistic Regression} \cite{HastieESL2009} modelliert die Wahrscheinlichkeit der positiven Klasse als logistische Funktion einer Linearkombination der Eingabemerkmale. Es dient als einfache, gut interpretierbare lineare Referenz, an der sich die fortgeschritteneren, nichtlinearen Modelle messen lassen müssen. Der Regularisierungsparameter $C$ wurde per Grid-Search über Kreuzvalidierung optimiert, wobei sich datensatzspezifisch $C=10$ für Telco und Online Shoppers Intention sowie $C=1$ für Bank Marketing als beste Werte ergaben.
 
-\textbf{Naive Bayes} wendet den Satz von Bayes unter der vereinfachenden Annahme an, dass alle Merkmale bedingt unabhängig von der Klasse sind. Im Gegensatz zur Logistic Regression trifft es eine starke probabilistische Modellannahme, die auf korrelierten Daten systematisch verletzt ist, was die Vorhersageleistung auf dem Bank-Marketing-Datensatz mit seinen kollinearen makroökonomischen Indikatoren direkt sichtbar macht. Auch hier wird ohne Hyperparameter-Suche mit Standardeinstellungen (Gaussian Naive Bayes) trainiert.
+\textbf{Naive Bayes} \cite{BishopPRML2006} wendet den Satz von Bayes unter der vereinfachenden Annahme an, dass alle Merkmale bedingt unabhängig von der Klasse sind. Im Gegensatz zur Logistic Regression trifft es eine starke probabilistische Modellannahme, die auf korrelierten Daten systematisch verletzt ist, was die Vorhersageleistung auf dem Bank-Marketing-Datensatz mit seinen kollinearen makroökonomischen Indikatoren direkt sichtbar macht. Auch hier wird ohne Hyperparameter-Suche mit Standardeinstellungen (Gaussian Naive Bayes) trainiert.
 
-\textbf{K-Nearest Neighbors} klassifiziert neue Datenpunkte anhand der Mehrheitsentscheidung der $k$ nächsten Trainingspunkte im Merkmalsraum und stellt damit als einziges der drei Baseline-Verfahren kein parametrisches Modell dar. Als distanzbasiertes Verfahren reagiert es sensitiv auf Merkmalsmaßstäbe, weshalb eine MinMax-Skalierung vorgeschaltet wird. Der Hyperparameter $k$ wurde im Bereich 1--31 (ungerade Werte) je Datensatz per Kreuzvalidierung optimiert, wobei sich deutlich unterschiedliche optimale Werte ergaben ($k=25$ für Telco, $k=27$ für Bank Marketing, $k=31$ für Online Shoppers Intention).
+\textbf{K-Nearest Neighbors} \cite{HastieESL2009} klassifiziert neue Datenpunkte anhand der Mehrheitsentscheidung der $k$ nächsten Trainingspunkte im Merkmalsraum und stellt damit als einziges der drei Baseline-Verfahren kein parametrisches Modell dar. Als distanzbasiertes Verfahren reagiert es sensitiv auf Merkmalsmaßstäbe, weshalb eine MinMax-Skalierung vorgeschaltet wird. Der Hyperparameter $k$ wurde im Bereich 1--31 (ungerade Werte) je Datensatz per Kreuzvalidierung optimiert, wobei sich deutlich unterschiedliche optimale Werte ergaben ($k=25$ für Telco, $k=27$ für Bank Marketing, $k=31$ für Online Shoppers Intention).
 
 \begin{flushright}\textit{Autor: Xuan Truong Nguyen}\end{flushright}
 
@@ -136,9 +139,9 @@ Als Baseline-Verfahren werden drei klassische Klassifikatoren eingesetzt, die oh
 
 Die vier fortgeschrittenen Modelle werden, anders als die Baselines, mit geschachtelter Kreuzvalidierung und datensatzspezifischer Hyperparameter-Optimierung evaluiert. Sie decken drei unterschiedliche Modellklassen ab: kernbasierte Verfahren (SVM), neuronale Netze (MLP) sowie baumbasierte Ensemble-Methoden (Random Forest, Gradient Boosting).
 
-\textbf{Support Vector Machine} sucht mittels eines RBF-Kerns eine nichtlineare Trennfläche, die den Abstand (Margin) zwischen den Klassen maximiert. Es ist enthalten, weil es im Gegensatz zu den linearen Baseline-Verfahren nichtlineare Klassengrenzen abbilden kann, ohne eine separate Architektursuche zu benötigen. Optimiert wurde der Regularisierungsparameter $C$ über die Werte $\{0{,}01,\, 0{,}1,\, 1,\, 10\}$, der den Kompromiss zwischen maximaler Trennschärfe und Toleranz gegenüber Fehlklassifikationen steuert.
+\textbf{Support Vector Machine} \cite{HastieESL2009} sucht mittels eines RBF-Kerns eine nichtlineare Trennfläche, die den Abstand (Margin) zwischen den Klassen maximiert. Es ist enthalten, weil es im Gegensatz zu den linearen Baseline-Verfahren nichtlineare Klassengrenzen abbilden kann, ohne eine separate Architektursuche zu benötigen. Optimiert wurde der Regularisierungsparameter $C$ über die Werte $\{0{,}01,\, 0{,}1,\, 1,\, 10\}$, der den Kompromiss zwischen maximaler Trennschärfe und Toleranz gegenüber Fehlklassifikationen steuert.
 
-\textbf{Multi-Layer Perceptron} ist ein mehrschichtiges neuronales Netz, das nichtlineare Entscheidungsgrenzen über eine Abfolge gewichteter, nichtlinear aktivierter Schichten lernt. Es dient als Vertreter neuronaler Verfahren und prüft, ob ein flexibler, nicht baumbasierter Funktionsapproximator die Ensemble-Modelle auf diesen tabellarischen Daten übertreffen kann. Optimiert wurden die Netzarchitektur (Schichtgrößen $\{(64), (128), (64,32), (128,64)\}$) sowie die Regularisierungsstärke; zusätzlich wird Early Stopping eingesetzt, um Overfitting zu vermeiden.
+\textbf{Multi-Layer Perceptron} \cite{BishopPRML2006} ist ein mehrschichtiges neuronales Netz, das nichtlineare Entscheidungsgrenzen über eine Abfolge gewichteter, nichtlinear aktivierter Schichten lernt. Es dient als Vertreter neuronaler Verfahren und prüft, ob ein flexibler, nicht baumbasierter Funktionsapproximator die Ensemble-Modelle auf diesen tabellarischen Daten übertreffen kann. Optimiert wurden die Netzarchitektur (Schichtgrößen $\{(64), (128), (64,32), (128,64)\}$) sowie die Regularisierungsstärke; zusätzlich wird Early Stopping eingesetzt, um Overfitting zu vermeiden.
 
 \begin{flushright}\textit{Autor: Xuan Truong Nguyen}\end{flushright}
 
@@ -189,7 +192,7 @@ Online Shoppers Intention & UCI & 12.330 & 18 & Revenue & 15,5\,\% \\
 \end{tabular}
 \end{table}
 
-Der Telco-Customer-Churn-Datensatz umfasst 7.043~Zeilen mit 20~Merkmalen (Minorität 26,5\,\%), der Online-Shoppers-Intention-Datensatz 12.330~Zeilen mit 18~Merkmalen (Minorität 15,5\,\%).
+Der Telco-Customer-Churn-Datensatz \cite{TelcoDataset} umfasst 7.043~Zeilen mit 20~Merkmalen (Minorität 26,5\,\%), der Online-Shoppers-Intention-Datensatz 12.330~Zeilen mit 18~Merkmalen (Minorität 15,5\,\%).
 
 Der Bank-Marketing-Datensatz \cite{Moro2014} ist mit 41.188~Zeilen und 21~Merkmalen der umfangreichste und zugleich am stärksten unbalanciert (Minorität 11,3\,\%). Die makroökonomischen Indikatoren weisen starke Kollinearität auf, insbesondere zwischen Beschäftigungsvariationsrate und Euribor-Dreimonatszinssatz ($r=0{,}97$), was bei der Interpretation von Feature-Importance-Maßen in Abschnitt~\ref{sec:detailed-analysis} zu berücksichtigen ist. Das ausgeprägte Klassenungleichgewicht begründet die Wahl von F1-Score und ROC-AUC als primäre Evaluationsmetriken.
 
@@ -203,13 +206,13 @@ Die Experimente werden in Python unter Verwendung von scikit-learn \cite{Pedrego
 
 \subsection{Ergebnisse und Diskussion}
 
-Tabelle~\ref{tab:overall} fasst die ROC-AUC-Werte aller sieben Klassifikatoren zusammen. Auf allen drei Datensätzen übertreffen die fortgeschrittenen Modelle die Baselines deutlich, wobei die Rangfolge innerhalb beider Gruppen je nach Datensatz leicht variiert. Die Unterschiede zwischen den Datensätzen selbst sind erheblich: Während auf Bank Marketing Werte über 0,93 erreichbar sind, liegt das gesamte Leistungsspektrum auf Telco zwischen 0,76 und 0,85, was die höhere Schwierigkeit dieses Datensatzes widerspiegelt.
+Tabelle~\ref{tab:overall} fasst die ROC-AUC-Werte aller sieben Klassifikatoren zusammen. Auf allen drei Datensätzen übertreffen die fortgeschrittenen Modelle die Baselines deutlich, wobei die Rangfolge innerhalb beider Gruppen je nach Datensatz leicht variiert. Die Unterschiede zwischen den Datensätzen selbst sind erheblich: Während auf Bank Marketing Werte über 0,93 erreichbar sind, liegt das gesamte Leistungsspektrum auf Telco zwischen 0,76 und 0,85, was die höhere Schwierigkeit dieses Datensatzes widerspiegelt. Eine ergänzende, ausschließlich auf Test-Set-Werten basierende Gesamtübersicht aller sieben Klassifikatoren --- ohne die in Tabelle~\ref{tab:overall} teils vermischten CV- und Hold-out-Werte --- zeigt Abbildung~\ref{fig:overall-testauc} im Anhang; die dortige Rangfolge (Random Forest vor MLP, SVM, Logistic Regression und Gradient Boosting) bestätigt die hier berichteten Ergebnisse.
 
 Unter den Baseline-Verfahren zeigt k-Nearest Neighbors die größte Variabilität zwischen den Datensätzen (ROC-AUC 0{,}760--0{,}890; detaillierte Metriken in Tab.~\ref{tab:knn-results}), was auf die Sensitivität des distanzbasierten Verfahrens gegenüber der dimensionalen Merkmalsstruktur zurückzuführen ist.
 
 % [Logistic Regression: Auswertung durch Teammitglieder]
 
-Naive Bayes fällt unter den Baseline-Verfahren vor allem auf Bank Marketing deutlich ab (ROC-AUC 0{,}762; detaillierte Metriken in Tab.~\ref{tab:nb-results}), da die stark kollinearen makroökonomischen Indikatoren die Annahme bedingter Unabhängigkeit verletzen. Auf Telco erkauft es sich dagegen den höchsten Recall aller Baseline-Verfahren (0{,}78) auf Kosten einer niedrigen Precision (0{,}47), während es auf Ecom mit einer ROC-AUC von 0{,}877 seine beste Leistung erzielt.
+Naive Bayes fällt unter den Baseline-Verfahren vor allem auf Bank Marketing deutlich ab (ROC-AUC 0{,}762; detaillierte Metriken in Tab.~\ref{tab:nb-results}), da die stark kollinearen makroökonomischen Indikatoren die Annahme bedingter Unabhängigkeit verletzen. Auf Telco erkauft es sich dagegen den höchsten Recall aller Baseline-Verfahren (0{,}78) auf Kosten einer niedrigen Precision (0{,}47), während es auf Ecom mit einer ROC-AUC von 0{,}877 seine beste Leistung erzielt. Über alle drei Datensätze hinweg bestätigt sich die Gesamtrangfolge der Baseline-Verfahren (Abb.~\ref{fig:baseline-comp} im Anhang): Logistic Regression erzielt die beste Baseline-Performance, vor Naive Bayes und k-Nearest Neighbors --- bei Naive Bayes jedoch mit dem höchsten Recall der drei Verfahren.
 
 % [SVM: Auswertung durch Teammitglieder]
 
@@ -262,9 +265,9 @@ Die Konfusionsmatrix bestätigt das konservative Verhalten: Rund 40\,\% der tats
 
 \paragraph{Vergleich mit Literatur.}
 
-Der auf dem Bank-Marketing-Datensatz erzielte Test-ROC-AUC von 0{,}943 übertrifft die von Moro et al.~\cite{Moro2014} publizierten Baseline-Ergebnisse ($\approx$0{,}938 AUC mit einem Random Forest unter zufälliger Aufteilung) marginal, obwohl in der vorliegenden Arbeit ein zeitlich konservatives Aufteilungsschema verwendet wird, das spätere Daten konsequent aus dem Training ausschließt. Dieser scheinbare Widerspruch ist darauf zurückzuführen, dass die optimale Ensemble-Konfiguration für den vollständigen Datensatz nach 2013 gewählt wurde, während Moro et al.\ auf einer kleineren Stichprobe arbeiteten. Die Befunde zur Merkmalswichtigkeit decken sich jedoch weitgehend: Auch in der Originalstudie gelten \texttt{duration}, \texttt{poutcome} und makroökonomische Indikatoren als die entscheidenden Prädiktoren.
+Der auf dem Bank-Marketing-Datensatz erzielte Test-ROC-AUC von 0{,}943 übertrifft die von Moro et al.~\cite{Moro2014} publizierten Baseline-Ergebnisse deutlich: Die Originalstudie verglich Logistic Regression, Decision Trees, ein neuronales Netz und SVM und erzielte mit dem neuronalen Netz als bestem Modell einen AUC von lediglich 0{,}8. Random Forest war dort nicht Teil des Vergleichs, sodass unser höherer Wert nicht direkt einem entsprechenden Ergebnis der Originalstudie gegenübersteht, sondern eher den methodischen Fortschritt seither widerspiegelt --- u.\,a.\ modernere Ensemble-Verfahren, eine größere, bis 2013 reichende Datenbasis und eine feinere Hyperparameter-Optimierung. Die Befunde zur Merkmalswichtigkeit decken sich jedoch weitgehend: Auch in der Originalstudie gelten die Gesprächsdauer und makroökonomische Indikatoren als die entscheidenden Prädiktoren.
 
-Über den spezifischen Datensatz hinaus bestätigen die Ergebnisse ein breiteres Muster: Baumbasierte Ensemble-Methoden dominieren auf tabellarischen Datensätzen unabhängig von der Anwendungsdomäne. Fernández-Delgado et al.~\cite{FernandezDelgado2014} zeigten in einem groß angelegten Benchmark über 121 Datensätze, dass Random Forests zu den konsistent besten Verfahren zählen. Dieses Muster findet sich gleichlautend in einer Parallelarbeit, die Klassifikationsverfahren auf medizinischen Tabellendaten (Diabetes-Prognose) vergleicht: Auch dort erreichen baumbasierte Ensembles die höchste Vorhersagegüte und übertreffen lineare Modelle sowie Nearest-Neighbor-Verfahren deutlich \cite{Breiman2001}. Die vorliegende Arbeit liefert damit einen weiteren Beleg für die domänenübergreifende Stärke von Ensemble-Verfahren auf strukturierten Tabellendaten, sei es im Bereich Kundenverhalten oder im klinischen Kontext.
+Über den spezifischen Datensatz hinaus bestätigen die Ergebnisse ein breiteres Muster: Baumbasierte Ensemble-Methoden dominieren auf tabellarischen Datensätzen unabhängig von der Anwendungsdomäne. Fernández-Delgado et al.~\cite{FernandezDelgado2014} zeigten in einem groß angelegten Benchmark über 121 Datensätze, dass Random Forests zu den konsistent besten Verfahren zählen. Die vorliegende Arbeit liefert damit einen weiteren Beleg für die domänenübergreifende Stärke von Ensemble-Verfahren auf strukturierten Tabellendaten im Bereich Kundenverhalten.
 
 \paragraph{Limitationen}
 
@@ -278,7 +281,7 @@ Die Generalisierbarkeit ist in mehrfacher Hinsicht begrenzt: Die vertiefte Analy
 
 Die Precision-Recall-Charakteristik des Modells hat direkte geschäftliche Relevanz im Telemarketing-Kontext. Ein False Positive entspricht einem ungerechtfertigten Anruf: Der Kunde schließt kein Term-Deposit ab, und das Callcenter-Personal investiert Zeit ohne Ertrag. Ein False Negative hingegen entspricht einem verpassten Abschluss: Ein tatsächlich interessierter Kunde wird nicht kontaktiert. Da die Kosten dieser beiden Fehlertypen in der Regel asymmetrisch sind (verpasster Abschluss = entgangener Umsatz, unnötiger Anruf = Betriebskosten plus Reputationsrisiko), bietet sich eine gezielte Schwellenwert-Anpassung an: Ein niedrigerer Entscheidungsschwellenwert erhöht den Recall auf Kosten der Precision und erschließt mehr potenzielle Abschlüsse, während ein höherer Schwellenwert den Fokus auf hochwahrscheinliche Kandidaten legt und den Agentenaufwand minimiert. Welche Konfiguration optimal ist, hängt vom konkreten Geschäftsszenario und dem Verhältnis der Fehlerkosten ab und lässt sich nicht allein aus den Modellmetriken ableiten.
 
-Schließlich unterstreicht die Merkmal \texttt{duration} als stärkster Prädiktor eine grundsätzliche Einschränkung des Modells für den operativen Einsatz: Da die Gesprächsdauer erst nach dem Anruf bekannt ist, kann das Modell in der vorliegenden Form nicht für das prospektive Targeting vor einem Kundenkontakt eingesetzt werden. Für eine praktische Deployment-Entscheidung wäre ein ergänzendes Modell erforderlich, das ausschließlich auf vor dem Anruf verfügbaren Merkmalen (demographische Daten, makroökonomische Lage, Kampagnenhistorie) basiert. Die vorliegende Analyse liefert damit in erster Linie Erkenntnisse über die Entscheidungsstruktur des Datensatzes; ihr operativer Nutzen liegt in der Identifikation derjenigen Merkmale, die nach einem Anruf die Abschlusswahrscheinlichkeit am zuverlässigsten erklären.
+Schließlich unterstreicht die Gesprächsdauer als stärkster Prädiktor eine grundsätzliche Einschränkung des Modells für den operativen Einsatz: Da die Gesprächsdauer erst nach dem Anruf bekannt ist, kann das Modell in der vorliegenden Form nicht für das prospektive Targeting vor einem Kundenkontakt eingesetzt werden. Für eine praktische Deployment-Entscheidung wäre ein ergänzendes Modell erforderlich, das ausschließlich auf vor dem Anruf verfügbaren Merkmalen (demographische Daten, makroökonomische Lage, Kampagnenhistorie) basiert. Die vorliegende Analyse liefert damit in erster Linie Erkenntnisse über die Entscheidungsstruktur des Datensatzes; ihr operativer Nutzen liegt in der Identifikation derjenigen Merkmale, die nach einem Anruf die Abschlusswahrscheinlichkeit am zuverlässigsten erklären.
 
 \section{Fazit}
 
@@ -288,32 +291,6 @@ Schließlich unterstreicht die Merkmal \texttt{duration} als stärkster Prädikt
 	\item Limitationen kurz wiederholen (Overfitting/Bias-Variance-Gap, eingeschränkter Analyseumfang auf einen Datensatz, fehlende Exploration von Resampling-/Cost-Sensitive-Verfahren).
 	\item Offene Fragen/Ausblick: Modellanalyse auf Telco/Ecom ausweiten, Threshold-/Cost-Sensitive-Tuning für Geschäftsszenarien, Untersuchung weiterer Hyperparameter, Robustheit gegenüber Concept Drift (Bank-Datensatz) genauer untersuchen.
 \end{itemize}
-
-\section{Literaturverzeichnis: Hinweis}
-
-Alle in der Arbeit zitierten Quellen sind im Literaturverzeichnis aufzuführen.
-
-Externe Aussagen, Gedanken und Ideen, die nicht zum Allgemeinwissen gehören (z.\,B. die Normalverteilung), müssen durch eine Quellenangabe belegt werden.
-
-Bei der ersten Erwähnung von Verfahren, Konzepten, Frameworks usw. ist der Name der Autorin/des Autors in der Zitation anzugeben. Für Standardverfahren kann ein Lehrbuch als Quelle zitiert werden.
-
-Der Zitier- und Referenzierungsstil ist über die gesamte Arbeit hinweg konsistent zu halten (z.\,B. APA, Chicago oder ein anderer gängiger Stil).
-
-\paragraph*{Geplante Referenzen (Platzhalter, noch zu ergänzen):}
-\begin{itemize}
-	\item UCI Bank Marketing Dataset (Moro, Cortez, Rita) — Originalquelle des Bank-Datensatzes.
-	\item Originalquelle Online Shoppers Purchasing Intention Dataset (Sakar et al.).
-	\item Telco Customer Churn Dataset (IBM/Kaggle).
-	\item Breiman (2001) — Random Forests.
-	\item Lundberg \& Lee (2017) — SHAP (A Unified Approach to Interpreting Model Predictions).
-	\item Lehrbuch-Standardreferenzen zu Logistic Regression, SVM, MLP und Gradient Boosting, z.\,B. Hastie/Tibshirani/Friedman, \emph{Elements of Statistical Learning}, oder Bishop, \emph{Pattern Recognition and Machine Learning}.
-	\item Ggf. weitere Literatur zu Churn-Prediction/Bank-Marketing-Klassifikation aus der Related-Work-Recherche.
-\end{itemize}
-
-\paragraph*{Anmerkung:}
-Die in diesem Dokument verwendete \verb|thebibliography|-Umgebung eignet sich für eine kleine Anzahl von Referenzen. Für größere Projekte sollten \verb|.bib|-Dateien zur besseren Verwaltung der Referenzen verwendet werden.
-
-
 
 \addcontentsline{toc}{section}{Literaturverzeichnis}
 \begin{thebibliography}{}
@@ -349,6 +326,11 @@ C.~O.~Sakar, S.~O.~Polat, M.~Katircioglu, and Y.~Kastro.
 \newblock Real-time prediction of online shoppers' purchasing intention using multilayer perceptron and LSTM recurrent neural networks.
 \newblock \emph{Neural Computing and Applications}, 31(10):6893--6908, 2019.
 
+\bibitem{TelcoDataset}
+IBM.
+\newblock Telco customer churn dataset.
+\newblock \emph{IBM Watson Analytics / Kaggle}, 2018.
+
 \bibitem{Breiman2001}
 L.~Breiman.
 \newblock Random forests.
@@ -358,6 +340,16 @@ L.~Breiman.
 J.~H.~Friedman.
 \newblock Greedy function approximation: A gradient boosting machine.
 \newblock \emph{The Annals of Statistics}, 29(5):1189--1232, 2001.
+
+\bibitem{HastieESL2009}
+T.~Hastie, R.~Tibshirani, and J.~Friedman.
+\newblock \emph{The Elements of Statistical Learning: Data Mining, Inference, and Prediction}.
+\newblock Springer, 2nd edition, 2009.
+
+\bibitem{BishopPRML2006}
+C.~M.~Bishop.
+\newblock \emph{Pattern Recognition and Machine Learning}.
+\newblock Springer, 2006.
 
 \bibitem{Lundberg2017}
 S.~M.~Lundberg and S.-I.~Lee.
@@ -384,38 +376,39 @@ F.~Pedregosa et al.
 \begin{table}[H]
     \centering
     \footnotesize
-    \caption{Hyperparameter-Suchräume (\texttt{GridSearchCV}) für die Klassifikatoren. Naive Bayes wird ohne Grid für die finale Modellauswahl verwendet (siehe Abschnitt~3.2); die Naive-Bayes-Implementierung (\texttt{BernoulliNB}) läuft ausschließlich mit Standardeinstellungen.}
+    \setlength{\tabcolsep}{4pt}
+    \caption{Hyperparameter-Suchräume (Rastersuche) für die Klassifikatoren. Naive Bayes wird ohne Grid für die finale Modellauswahl verwendet (siehe Abschnitt~3.2) und läuft ausschließlich mit Standardeinstellungen.}
     \label{tab:hyperparameters}
     \begin{tabular}{|l|l|l|}
         \hline
         \textbf{Klassifikator} & \textbf{Parameter} & \textbf{Suchraum} \\
         \hline
-        LogisticRegression
-            & C & \texttt{\{0,001,\ 0,01,\ 0,1,\ 1,\ 10,\ 100\}} \\
+        Logistic Regression
+            & Regularisierungsparameter $C$ & $\{0{,}001,\ 0{,}01,\ 0{,}1,\ 1,\ 10,\ 100\}$ \\
         \hline
-        KNeighborsClassifier
-            & n\_neighbors & \texttt{\{1, 3, 5, \dots, 31\}} (ungerade) \\
+        k-Nearest Neighbors
+            & Anzahl Nachbarn $k$ & $\{1, 3, 5, \dots, 31\}$ (ungerade) \\
         \hline
-        GaussianNB / BernoulliNB
+        Naive Bayes
             & --- & keine Suche, Standardeinstellungen \\
         \hline
-        \multirow{2}{*}{SVC}
-            & C & \texttt{\{0,01,\ 0,1,\ 1,\ 10\}} \\
-            & kernel & \texttt{rbf} (fixiert) \\
+        \multirow{2}{*}{Support Vector Machine}
+            & Regularisierungsparameter $C$ & $\{0{,}01,\ 0{,}1,\ 1,\ 10\}$ \\
+            & Kernel & RBF (fixiert) \\
         \hline
-        \multirow{2}{*}{MLPClassifier}
-            & hidden\_layer\_sizes & \texttt{\{(64), (128), (64, 32), (128, 64)\}} \\
-            & alpha & \texttt{\{0,0001,\ 0,001,\ 0,01\}} \\
+        \multirow{2}{*}{Multi-Layer Perceptron}
+            & Netzarchitektur (Schichtgrößen) & $\{(64), (128), (64, 32), (128, 64)\}$ \\
+            & Regularisierungsstärke $\alpha$ & $\{0{,}0001,\ 0{,}001,\ 0{,}01\}$ \\
         \hline
-        \multirow{3}{*}{RandomForestClassifier}
-            & n\_estimators & \texttt{\{100, 200\}} \\
-            & max\_depth & \texttt{\{unbegrenzt, 10, 20\}} \\
-            & max\_features & \texttt{\{sqrt, log2\}} \\
+        \multirow{3}{*}{Random Forest}
+            & Anzahl Bäume & $\{100, 200\}$ \\
+            & maximale Baumtiefe & $\{$unbegrenzt$, 10, 20\}$ \\
+            & Merkmale pro Split & $\{\sqrt{\cdot}, \log_2\}$ \\
         \hline
-        \multirow{3}{*}{GradientBoostingClassifier}
-            & max\_iter & \texttt{\{100, 200, 300\}} \\
-            & learning\_rate & \texttt{\{0,01,\ 0,05,\ 0,1\}} \\
-            & max\_depth & \texttt{\{5, 10, 15, unbegrenzt\}} \\
+        \multirow{3}{*}{Gradient Boosting}
+            & Anzahl Boosting-Iterationen & $\{100, 200, 300\}$ \\
+            & Lernrate & $\{0{,}01,\ 0{,}05,\ 0{,}1\}$ \\
+            & maximale Baumtiefe & $\{5, 10, 15,$ unbegrenzt$\}$ \\
         \hline
     \end{tabular}
 \end{table}
@@ -458,7 +451,7 @@ Ecom    & 31 & $0{,}889 \pm 0{,}013$ & 0{,}890 & 0{,}62 & 0{,}71 & 0{,}55 \\
 \centering
 \footnotesize
 \setlength{\tabcolsep}{4pt}
-\caption{Naive Bayes (BernoulliNB): Ergebnisse je Datensatz. CV-AUC = 5-fold-CV-Mittelwert ($\pm$\,Std.), keine Hyperparameter-Suche; Test-Werte auf separatem Hold-out-Testset; F1/P/R für Zielklasse.}\label{tab:nb-results}
+\caption{Naive Bayes (Bernoulli-Variante): Ergebnisse je Datensatz. CV-AUC = 5-fold-CV-Mittelwert ($\pm$\,Std.), keine Hyperparameter-Suche; Test-Werte auf separatem Hold-out-Testset; F1/P/R für Zielklasse.}\label{tab:nb-results}
 \begin{tabular}{lccccc}
 \toprule
 Datensatz & CV-AUC & Test-AUC & F1 & Prec. & Recall \\
@@ -533,5 +526,19 @@ Ecom  & random   & $0.932 \pm 0.005$ & 0.935 & 0.667 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\subsection{Vergleichsdiagramme aus den Analyse-Notebooks}
+
+\begin{figure}[H]
+\centering
+\caption{Baseline-Klassifikatoren (KNN, Logistic Regression, Naive Bayes): Test-AUC und F1 je Datensatz.}\label{fig:baseline-comp}
+\includegraphics[width=\textwidth]{figures/baseclassifier_comp.png}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\caption{Gesamtvergleich aller sieben Klassifikatoren: Test-AUC je Datensatz. Im Unterschied zu Tabelle~\ref{tab:overall} werden hier für alle Modelle einheitlich Test-Set-Werte berichtet, ohne Vermischung mit CV-Werten.}\label{fig:overall-testauc}
+\includegraphics[width=\textwidth]{figures/vergleich_comp.png}
+\end{figure}
 
 \end{document}
