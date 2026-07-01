@@ -78,6 +78,8 @@ Die drei Datensätze liegen in heterogenen Rohformaten mit gemischten Datentypen
 
 Die Transformation für das Modelltraining erfolgt ausschließlich innerhalb der Evaluierungspipelines: Numerische Merkmale werden standardisiert, kategoriale One-Hot-kodiert, wobei die Anpassung nur auf Trainingsfolds erfolgt und Testdaten ausschließlich transformiert werden. Diese Trennung verhindert Data Leakage, das bei globaler Skalierung vor der Aufteilung zu optimistisch verzerrten Ergebnissen führen würde. Der Zufallsgenerator ist durchgängig fixiert.
 
+\begin{flushright}\textit{Autor: Johannes Ramser}\end{flushright}
+
 \subsection{Baseline-Klassifikatoren (Task 2)}
 
 Als Baseline-Verfahren werden drei klassische Klassifikatoren eingesetzt, die ohne aufwändige Hyperparameter-Optimierung eine erste Einordnung der Schwierigkeitsgrade der Datensätze ermöglichen und als Vergleichsmaßstab für die fortgeschrittenen Modelle dienen.
@@ -116,12 +118,16 @@ Zur Bewertung wird jeder Datensatz in einen Trainings- (80\,\%) und einen Testan
 
 Als primäre Metriken dienen F1-Score und ROC-AUC --- beide sind bei unbalancierten Klassen aussagekräftiger als Accuracy --- Accuracy wird sekundär berichtet. Der Zufallsgenerator ist in sämtlichen Operationen fixiert.
 
+\begin{flushright}\textit{Autor: Johannes Ramser}\end{flushright}
+
 \subsection{Modellanalyse-Framework}
 \label{sec:model-analysis}
 
 Reine Vorhersagemetriken erfassen lediglich die mittlere Güte eines Modells, nicht aber Merkmalswichtigkeit, Lernverhalten oder systematische Fehlerquellen. Das Analyse-Framework unterzieht das beste Modell --- Random Forest auf dem Bank-Marketing-Datensatz --- einer vertieften Untersuchung auf fünf Dimensionen.
 
 Die Permutation Importance \cite{Breiman2001} misst die globale Merkmalswichtigkeit über die F1-Verschlechterung bei Permutation der Merkmalswerte. SHAP \cite{Lundberg2017} weist jedem Merkmal für jede Vorhersage einen additiven Beitrag aus Shapley-Werten zu; Beeswarm- und Dependence-Plots kombinieren Wichtigkeit mit Einflussrichtung. Bei stark korrelierten Merkmalen teilen sich die Beiträge künstlich auf, sodass individuelle Effekte nicht kausal trennbar sind. Lernkurven und Hyperparameter-Sensitivitätsanalysen diagnostizieren Overfitting und identifizieren Plateaupunkte abnehmenden Mehrwerts, während Konfusionsmatrix und Misclassification-Analyse systematische Fehlermuster aufdecken.
+
+\begin{flushright}\textit{Autor: Johannes Ramser}\end{flushright}
 
 \section{Experimente}
 \subsection{Daten}
@@ -148,9 +154,13 @@ Der Telco-Customer-Churn-Datensatz umfasst 7.043~Zeilen mit 20~Merkmalen (Minori
 
 Der Bank-Marketing-Datensatz \cite{Moro2014} ist mit 41.188~Zeilen und 21~Merkmalen der umfangreichste und zugleich am stärksten unbalanciert (Minorität 11,3\,\%). Die makroökonomischen Indikatoren weisen starke Kollinearität auf, insbesondere zwischen Beschäftigungsvariationsrate und Euribor-Dreimonatszinssatz ($r=0{,}97$), was bei der Interpretation von Feature-Importance-Maßen in Abschnitt~\ref{sec:detailed-analysis} zu berücksichtigen ist. Das ausgeprägte Klassenungleichgewicht begründet die Wahl von F1-Score und ROC-AUC als primäre Evaluationsmetriken.
 
+\begin{flushright}\textit{Autor: Johannes Ramser}\end{flushright}
+
 \subsection{Versuchsaufbau}
 
 Die Experimente werden in Python unter Verwendung von scikit-learn \cite{Pedregosa2011} mit durchgängig fixiertem Zufallsgenerator durchgeführt. Die in Abschnitt~\ref{sec:advanced-models} definierten Hyperparameter werden pro Modell mittels Rastersuche optimiert. Die Evaluierung folgt der in Abschnitt~\ref{sec:model-selection} beschriebenen Strategie mit geschachtelter Kreuzvalidierung (stratifiziert für Telco und Ecom, zeitseriell für Bank). Als primäre Metriken dienen F1-Score und ROC-AUC, Accuracy wird sekundär berichtet.
+
+\begin{flushright}\textit{Autor: Johannes Ramser}\end{flushright}
 
 \subsection{Ergebnisse und Diskussion}
 
@@ -207,6 +217,8 @@ Die SHAP-Analyse bestätigt die Dominanz der Gesprächsdauer und zeigt die Einfl
 
 Die Konfusionsmatrix bestätigt das konservative Verhalten: Rund 51\,\% der tatsächlichen Abschlüsse werden erkannt, während nur 5\,\% der Negativfälle falsch-positiv klassifiziert werden. Die Misclassification-Analyse zeigt, dass Fehler systematisch an der Entscheidungsgrenze auftreten --- bei Instanzen, deren Merkmalswerte im Übergangsbereich zwischen typischen Positiv- und Negativbeispielen liegen. Die verbleibende Unsicherheit ist strukturell durch die Begrenztheit der Merkmale bedingt, nicht durch zufälliges Rauschen.
 
+\begin{flushright}\textit{Autor: Johannes Ramser}\end{flushright}
+
 \paragraph{Vergleich mit Literatur.}
 
 Der auf dem Bank-Marketing-Datensatz erzielte Test-ROC-AUC von 0{,}943 übertrifft die von Moro et al.~\cite{Moro2014} publizierten Baseline-Ergebnisse ($\approx$0{,}938 AUC mit einem Random Forest unter zufälliger Aufteilung) marginal, obwohl in der vorliegenden Arbeit ein zeitlich konservatives Aufteilungsschema verwendet wird, das spätere Daten konsequent aus dem Training ausschließt. Dieser scheinbare Widerspruch ist darauf zurückzuführen, dass die optimale Ensemble-Konfiguration für den vollständigen Datensatz nach 2013 gewählt wurde, während Moro et al.\ auf einer kleineren Stichprobe arbeiteten. Die Befunde zur Merkmalswichtigkeit decken sich jedoch weitgehend: Auch in der Originalstudie gelten \texttt{duration}, \texttt{poutcome} und makroökonomische Indikatoren als die entscheidenden Prädiktoren.
@@ -218,6 +230,8 @@ Der auf dem Bank-Marketing-Datensatz erzielte Test-ROC-AUC von 0{,}943 übertrif
 Die gewichtigste praktische Limitation betrifft die Gesprächsdauer: Als dominierender Prädiktor treibt sie die Modellleistung maßgeblich, ist jedoch erst nach dem Kundenkontakt bekannt und steht für ein prospektives Targeting nicht zur Verfügung; die Analyse bleibt insofern primär deskriptiv. Die starke Kollinearität makroökonomischer Indikatoren ($r=0{,}97$) schränkt zudem sämtliche Feature-Importance-Maße ein --- Permutation Importance und SHAP weisen unter Multikollinearität konservativ beide Merkmale als bedeutsam aus, ohne dass die unabhängigen Beiträge bestimmbar wären.
 
 Die Generalisierbarkeit ist in mehrfacher Hinsicht begrenzt: Die vertiefte Analyse beschränkt sich auf eine Datensatz-Modell-Kombination; die SHAP-Berechnung wurde aus Rechenzeitgründen auf eine Stichprobe beschränkt; der zeitlich begrenzte Datensatz lässt keine Aussagen über Veränderungen über den erfassten Zeitraum hinaus zu; und Resampling-Verfahren sowie eine systematische Schwellenwert-Optimierung blieben unerprobt.
+
+\begin{flushright}\textit{Autor: Johannes Ramser}\end{flushright}
 
 \paragraph{Breitere Implikationen.}
 
