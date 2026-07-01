@@ -104,7 +104,7 @@ aber nicht speziell Kundenentscheidungen betrachten. Unsere Arbeit verbindet bei
 sieben Verfahren mit exakt demselben Ablauf über alle drei Anwendungsbereiche und achten neben der
 Vorhersagegüte darauf, wie nachvollziehbar und übertragbar die Modelle sind und wie sie mit dem
 Klassenungleichgewicht umgehen. Ein besonderes Augenmerk gilt dabei dem Problem, dass sich die
-Bedeutung einzelner Merkmale kaum bestimmen lässt, wenn zwei Merkmale stark zusammenhängen, wie im
+Bedeutung einzelner Meörkmale kaum bestimmen lässt, wenn zwei Merkmale stark zusammenhängen, wie im
 Bank-Marketing-Datensatz zwei wirtschaftliche Kennzahlen mit einer Korrelation von $r=0{,}97$.
 
 \begin{flushright}\textit{Autor: Florian Koo}\end{flushright}
@@ -207,15 +207,17 @@ Tabelle~\ref{tab:overall} fasst die ROC-AUC-Werte aller sieben Klassifikatoren z
 
 Unter den Baseline-Verfahren zeigt k-Nearest Neighbors die größte Variabilität zwischen den Datensätzen (ROC-AUC 0{,}760--0{,}890; detaillierte Metriken in Tab.~\ref{tab:knn-results}), was auf die Sensitivität des distanzbasierten Verfahrens gegenüber der dimensionalen Merkmalsstruktur zurückzuführen ist.
 
-% [Logistic Regression: Auswertung durch Teammitglieder]
+Die Logistic Regression ist nicht nur die stärkste Baseline, sondern bleibt auch gegenüber den fortgeschrittenen Modellen bemerkenswert konkurrenzfähig: Auf Bank Marketing erreicht sie eine Test-ROC-AUC von 0{,}931 (detaillierte Metriken in Tab.~\ref{tab:logreg-results}) und liegt damit nahezu gleichauf mit SVM (0{,}932) und MLP (0{,}941). Dass ein rein lineares Modell hier so gut abschneidet, deutet darauf hin, dass die entscheidenden Merkmale wie Gesprächsdauer und makroökonomische Indikatoren weitgehend monoton mit der Abschlusswahrscheinlichkeit zusammenhängen.
 
 Naive Bayes fällt unter den Baseline-Verfahren vor allem auf Bank Marketing deutlich ab (ROC-AUC 0{,}762; detaillierte Metriken in Tab.~\ref{tab:nb-results}), da die stark kollinearen makroökonomischen Indikatoren die Annahme bedingter Unabhängigkeit verletzen. Auf Telco erkauft es sich dagegen den höchsten Recall aller Baseline-Verfahren (0{,}78) auf Kosten einer niedrigen Precision (0{,}47), während es auf Ecom mit einer ROC-AUC von 0{,}877 seine beste Leistung erzielt.
 
-% [SVM: Auswertung durch Teammitglieder]
+Im direkten Vergleich der drei Baseline-Verfahren erweist sich die Logistic Regression im Mittel über alle Datensätze als das stärkste Modell (durchschnittliche Test-ROC-AUC 0{,}896), vor Naive Bayes (0{,}814) und k-Nearest Neighbors (0{,}806).
+
+Die Support Vector Machine erreicht ihre stärkste Leistung auf Bank Marketing (ROC-AUC 0{,}932; detaillierte Metriken in Tab.~\ref{tab:svm-results}) und liegt dort nahezu gleichauf mit dem MLP und den Ensemble-Methoden, fällt auf Telco mit 0{,}796 jedoch hinter alle übrigen fortgeschrittenen Modelle und sogar hinter die lineare Logistic-Regression-Baseline zurück. Auf Ecom ordnet sie sich mit 0{,}859 im Mittelfeld ein, wobei der optimale Regularisierungsparameter datensatzabhängig variiert ($C=1$ für Telco und Bank, $C=10$ für Ecom). Da nur $C$ optimiert wurde, profitiert das Verfahren vor allem vom großen Bank-Datensatz mit klar trennender Gesprächsdauer, während es an den stark überlappenden Klassen auf Telco scheitert.
 
 Das Multi-Layer Perceptron konkurriert auf Bank Marketing mit den Ensemble-Methoden (ROC-AUC 0{,}941 vs.\ 0{,}943--0{,}948; detaillierte Metriken in Tab.~\ref{tab:mlp-results}) und übertrifft den Random Forest auf Telco leicht (0{,}844 vs.\ 0{,}838), bleibt auf Ecom jedoch knapp zurück (0{,}916 vs.\ 0{,}924). Die variable Architekturwahl der Kreuzvalidierung spiegelt die unterschiedlichen Datensatzgrößen und Feature-Interaktionen wider.
 
-% [Gradient Boosting: Auswertung durch Teammitglieder]
+Gradient Boosting zählt über alle drei Datensätze zu den leistungsstärksten Verfahren und erzielt auf Telco (ROC-AUC 0{,}848) sowie Ecom (0{,}935) die jeweils höchsten Werte des gesamten Vergleichs (detaillierte Metriken in Tab.~\ref{tab:gb-results}). Auf Bank Marketing erreicht es zwar die höchste geschachtelte CV-ROC-AUC (0{,}948), fällt auf dem zeitlich abgetrennten Testset jedoch auf 0{,}909 zurück, was auf die Empfindlichkeit gegenüber der zeitlichen Verschiebung der makroökonomischen Indikatoren hindeutet.
 
 Random Forest erzielt auf Bank Marketing die höchste Test-ROC-AUC aller sieben Klassifikatoren (0,943) und zeigt über alle drei Datensätze eine konsistent starke Leistung (detaillierte Metriken in Tab.~\ref{tab:rf-results}). Als bestes Modell des Vergleichs wird es im folgenden Abschnitt vertieft analysiert.
 
