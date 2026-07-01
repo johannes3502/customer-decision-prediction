@@ -7,6 +7,7 @@
 \usepackage{microtype}
 \usepackage{booktabs}
 %\usepackage{refcheck}
+\usepackage[colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue]{hyperref}
 \setkomafont{author}{\small}
 \sloppy
 \emergencystretch=3em
@@ -155,17 +156,17 @@ Sämtliche Experimente werden in Python unter Verwendung der Bibliothek scikit-l
 
 Tabelle~\ref{tab:overall} fasst die ROC-AUC-Werte aller sieben Klassifikatoren zusammen. Auf allen drei Datensätzen übertreffen die fortgeschrittenen Modelle die Baselines deutlich, wobei die Rangfolge innerhalb beider Gruppen je nach Datensatz leicht variiert. Die Unterschiede zwischen den Datensätzen selbst sind erheblich: Während auf Bank Marketing Werte über 0,93 erreichbar sind, liegt das gesamte Leistungsspektrum auf Telco zwischen 0,78 und 0,85, was die höhere Schwierigkeit dieses Datensatzes widerspiegelt.
 
-Unter den Baseline-Verfahren zeigt k-Nearest Neighbors auf Telco und Bank das schwächste Ergebnis (0,760 und 0,770), während es auf Ecom mit 0,890 überraschend stark abschneidet und dort die Logistic Regression einstellt. Dieser deutliche Kontrast zwischen den Datensätzen ist kein Zufall, sondern spiegelt, wie sensibel KNN auf die Merkmalsstruktur reagiert: Auf Ecom dominieren numerische Merkmale, während Telco und Bank nach dem One-Hot-Encoding kategorischer Variablen einen erheblich hochdimensionaleren Merkmalsraum aufweisen, in dem euklidische Abstände an Aussagekraft verlieren. Das optimal gewählte $k$ variiert entsprechend stark zwischen den Datensätzen ($k=25$ für Telco, $k=27$ für Bank, $k=31$ für Ecom).
+Unter den Baseline-Verfahren zeigt k-Nearest Neighbors auf Telco und Bank das schwächste Ergebnis (0,760 und 0,770), während es auf Ecom mit 0,890 überraschend stark abschneidet (detaillierte Metriken in Tab.~\ref{tab:knn-results}) und dort die Logistic Regression einstellt. Dieser deutliche Kontrast zwischen den Datensätzen ist kein Zufall, sondern spiegelt, wie sensibel KNN auf die Merkmalsstruktur reagiert: Auf Ecom dominieren numerische Merkmale, während Telco und Bank nach dem One-Hot-Encoding kategorischer Variablen einen erheblich hochdimensionaleren Merkmalsraum aufweisen, in dem euklidische Abstände an Aussagekraft verlieren. Das optimal gewählte $k$ variiert entsprechend stark zwischen den Datensätzen ($k=25$ für Telco, $k=27$ für Bank, $k=31$ für Ecom).
 
 % [Logistic Regression und Naive Bayes: Auswertung durch Teammitglieder]
 
 % [SVM: Auswertung durch Teammitglieder]
 
-Das Multi-Layer Perceptron liefert die besten Ergebnisse unter den Nicht-Ensemble-Verfahren und konkurriert auf Bank Marketing eng mit den Ensemble-Methoden: Mit einer Test-ROC-AUC von 0,941 liegt es nur knapp unter Random Forest (0,943) und Gradient Boosting (0,945). Auf Telco übertrifft MLP den Random Forest leicht (0,844 vs.\ 0,838), während RF auf Ecom mit 0,924 gegenüber 0,916 vorne liegt. Die von der Kreuzvalidierung gewählte Architektur variiert sinnvoll mit der Datensatzgröße: Auf dem großen Bank-Datensatz genügt ein einzelnes Netz mit 128 Neuronen ($\alpha=0{,}01$), während auf Ecom eine zweischichtige Architektur bevorzugt wird, was auf komplexere Feature-Interaktionen in diesem kleineren Datensatz hindeutet.
+Das Multi-Layer Perceptron liefert die besten Ergebnisse unter den Nicht-Ensemble-Verfahren und konkurriert auf Bank Marketing eng mit den Ensemble-Methoden: Mit einer Test-ROC-AUC von 0,941 liegt es nur knapp unter Random Forest (0,943) und Gradient Boosting (0,945) (detaillierte Metriken in Tab.~\ref{tab:mlp-results}). Auf Telco übertrifft MLP den Random Forest leicht (0,844 vs.\ 0,838), während RF auf Ecom mit 0,924 gegenüber 0,916 vorne liegt. Die von der Kreuzvalidierung gewählte Architektur variiert sinnvoll mit der Datensatzgröße: Auf dem großen Bank-Datensatz genügt ein einzelnes Netz mit 128 Neuronen ($\alpha=0{,}01$), während auf Ecom eine zweischichtige Architektur bevorzugt wird, was auf komplexere Feature-Interaktionen in diesem kleineren Datensatz hindeutet.
 
 % [Gradient Boosting: Auswertung durch Teammitglieder]
 
-Random Forest erzielt auf Bank Marketing die höchste ROC-AUC aller sieben Klassifikatoren (0,943) und zeigt über alle drei Datensätze eine konsistent starke Leistung. Als bestes Modell des Vergleichs wird es im folgenden Abschnitt vertieft analysiert.
+Random Forest erzielt auf Bank Marketing die höchste ROC-AUC aller sieben Klassifikatoren (0,943) und zeigt über alle drei Datensätze eine konsistent starke Leistung (detaillierte Metriken in Tab.~\ref{tab:rf-results}). Als bestes Modell des Vergleichs wird es im folgenden Abschnitt vertieft analysiert.
 
 \begin{table}[ht]
 \centering
@@ -343,5 +344,58 @@ F.~Pedregosa et al.
 \newblock \emph{Journal of Machine Learning Research}, 12:2825--2830, 2011.
 
 \end{thebibliography}
+
+\appendix
+\section{Anhang}
+
+\subsection{Detaillierte Ergebnistabellen: k-Nearest Neighbors, MLP und Random Forest}
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{k-Nearest Neighbors: Ergebnisse je Datensatz. CV-AUC = Nested-CV-Mittelwert ($\pm$\,Std.) aus 5 äußeren Folds; F1/P/R bezieht sich auf die Zielklasse (Churn, Subscription, Purchase).}\label{tab:knn-results}
+\begin{tabular}{lccccccc}
+\toprule
+Datensatz & $k$ & CV-AUC & Test-AUC & F1 & Prec. & Recall \\
+\midrule
+Telco   & 25 & $0{,}768 \pm 0{,}012$ & 0{,}760 & 0{,}50 & 0{,}56 & 0{,}44 \\
+Bank    & 27 & $0{,}768 \pm 0{,}012$ & 0{,}770 & 0{,}34 & 0{,}63 & 0{,}23 \\
+Ecom    & 31 & $0{,}889 \pm 0{,}013$ & 0{,}890 & 0{,}62 & 0{,}71 & 0{,}55 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Multi-Layer Perceptron: Ergebnisse je Datensatz. CV-AUC = Nested-CV-Mittelwert ($\pm$\,Std.); Architektur und Regularisierungsparameter $\alpha$ aus innerem CV-Schritt; F1/P/R für Zielklasse.}\label{tab:mlp-results}
+\begin{tabular}{lcccccc}
+\toprule
+Datensatz & Architektur, $\alpha$ & CV-AUC & Test-AUC & F1 & Prec. & Recall \\
+\midrule
+Telco & $(64),\ 0{,}01$     & $0{,}829 \pm 0{,}019$ & 0{,}844 & 0{,}58 & 0{,}66 & 0{,}52 \\
+Bank  & $(128),\ 0{,}01$    & $0{,}938 \pm 0{,}003$ & 0{,}941 & 0{,}55 & 0{,}63 & 0{,}49 \\
+Ecom  & $(128,64),\ 0{,}01$ & $0{,}910 \pm 0{,}008$ & 0{,}916 & 0{,}63 & 0{,}71 & 0{,}57 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Random Forest: Ergebnisse je Datensatz. CV-AUC = Nested-CV-Mittelwert ($\pm$\,Std.); Konfiguration = Tiefe\,/\,Merkm.\,/\,Bäume aus innerem CV-Schritt; F1/P/R für Zielklasse.}\label{tab:rf-results}
+\begin{tabular}{lcccccc}
+\toprule
+Datensatz & Konfiguration & CV-AUC & Test-AUC & F1 & Prec. & Recall \\
+\midrule
+Telco & 10\,/\,sqrt\,/\,100    & $0{,}845 \pm 0{,}010$ & 0{,}838 & 0{,}63 & 0{,}55 & 0{,}73 \\
+Bank  & $\infty$\,/\,sqrt\,/\,200 & $0{,}945 \pm 0{,}004$ & 0{,}943 & 0{,}51 & 0{,}65 & 0{,}43 \\
+Ecom  & 20\,/\,log2\,/\,200    & $0{,}927 \pm 0{,}006$ & 0{,}924 & 0{,}63 & 0{,}71 & 0{,}56 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \end{document}
