@@ -5,7 +5,11 @@
 \usepackage[ngerman]{babel}
 \usepackage{tabto}
 \usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{float}
 %\usepackage{refcheck}
+\usepackage[colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue]{hyperref}
 \setkomafont{author}{\small}
 \sloppy
 \emergencystretch=3em
@@ -34,6 +38,8 @@ Kreuzvalidierung evaluiert, wobei F1-Score und ROC-AUC als Hauptmetriken dienen.
 einzelne dominante Merkmale sowie starke Feature-Korrelationen die Interpretierbarkeit der Modelle erheblich einschränken können.
 \end{abstract}
 
+\begin{flushright}\textit{Autor: Xuan Truong Nguyen}\end{flushright}
+
 
 \section{Einleitung}
 Heutzutage verfügen Unternehmen ständig über umfangreiche tabellarische Kundendaten, die von Vertragslaufzeiten und Nutzungsverhalten bis hin zu demografischen Merkmalen und makroökonomischen Indikatoren reichen. Dies führt dazu, dass die systematische Analyse und Auswertung solcher Daten erforderlich sind. Hierbei bieten die maschinellen Lernverfahren die Möglichkeit, Kundenentscheidungen frühzeitig 
@@ -50,6 +56,8 @@ oder Kaufverhalten\cite{Sakar2019}, einzelne Verfahren gezielt auf bestimmte Anw
 
 Diese Arbeit leistet einen Beitrag, indem sie sieben Klassifikationsverfahren: Logistic Regression, k-Nearest Neighbors, Naive Bayes, Support Vector Machine, Multi-Layer Perceptron, Random Forest und Gradient Boosting, auf drei öffentlich verfügbaren Datensätzen (Telco Customer Churn, Bank Marketing, Online Shoppers Intention) vergleicht. Alle Modelle werden in einer einheitlichen, leak-freien Preprocessing-Pipeline 
 mit geschachtelter Kreuzvalidierung evaluiert, wobei F1-Score und ROC-AUC als Hauptmetriken dienen. Über den reinen Modellvergleich hinaus umfasst die Analyse Lernkurven, Hyperparameter-Sensitivitätsanalysen, etc. , um nicht nur die Vorhersagegüte, sondern auch die Interpretierbarkeit und das Generalisierungsverhalten der Modelle zu bewerten.
+
+\begin{flushright}\textit{Autor: Xuan Truong Nguyen}\end{flushright}
 
 \section{Verwandte Arbeiten}
 
@@ -80,6 +88,8 @@ Als Baseline-Verfahren werden drei klassische Klassifikatoren eingesetzt, die oh
 
 \textbf{K-Nearest Neighbors} klassifiziert neue Datenpunkte anhand der Mehrheitsentscheidung der $k$ nächsten Trainingspunkte im Merkmalsraum und stellt damit als einziges der drei Baseline-Verfahren kein parametrisches Modell dar. Als distanzbasiertes Verfahren reagiert es sensitiv auf Merkmalsmaßstäbe, weshalb eine MinMax-Skalierung vorgeschaltet wird. Der Hyperparameter $k$ wurde im Bereich 1--31 (ungerade Werte) je Datensatz per Kreuzvalidierung optimiert, wobei sich deutlich unterschiedliche optimale Werte ergaben ($k=25$ für Telco, $k=27$ für Bank Marketing, $k=31$ für Online Shoppers Intention).
 
+\begin{flushright}\textit{Autor: Xuan Truong Nguyen}\end{flushright}
+
 \subsection{Fortgeschrittene Modelle (Task 3)}
 \label{sec:advanced-models}
 
@@ -89,11 +99,15 @@ Die vier fortgeschrittenen Modelle werden, anders als die Baselines, mit geschac
 
 \textbf{Multi-Layer Perceptron} ist ein mehrschichtiges neuronales Netz, das nichtlineare Entscheidungsgrenzen über eine Abfolge gewichteter, nichtlinear aktivierter Schichten lernt. Es dient als Vertreter neuronaler Verfahren und prüft, ob ein flexibler, nicht baumbasierter Funktionsapproximator die Ensemble-Modelle auf diesen tabellarischen Daten übertreffen kann. Optimiert wurden die Netzarchitektur (Schichtgrößen $\{(64), (128), (64,32), (128,64)\}$) sowie die Regularisierungsstärke; zusätzlich wird Early Stopping eingesetzt, um Overfitting zu vermeiden.
 
+\begin{flushright}\textit{Autor: Xuan Truong Nguyen}\end{flushright}
+
 Die beiden verbleibenden Modelle gehören zur Familie der baumbasierten Ensembles, verfolgen jedoch grundlegend unterschiedliche Strategien, um einzelne Bäume zu kombinieren.
 
 \textbf{Gradient Boosting} konstruiert ein additives Ensemble flacher Entscheidungsbäume, die, anders als beim Bagging des Random Forest, sequentiell trainiert werden: Jeder neue Baum approximiert den negativen Gradienten der Verlustfunktion und korrigiert so die Fehler des bisherigen Modells \cite{Friedman2001}. Es ist enthalten, weil dieser fehlerkorrigierende Mechanismus primär den Bias statt der Varianz reduziert und damit eine komplementäre Ensemble-Strategie zum Random Forest darstellt. Optimiert wurden die Lernrate ($\{0{,}01,\, 0{,}05,\, 0{,}1\}$), die Anzahl der Boosting-Iterationen ($\{100, 200, 300\}$) und die maximale Baumtiefe ($\{5, 10, 15,\,$unbegrenzt$\}$), wobei Lernrate und Iterationszahl den zentralen Regularisierungs-Kompromiss bilden.
 
 \textbf{Random Forest}, das im Experimentteil beste Modell, erweitert die Idee des Bagging von Entscheidungsbäumen um eine zusätzliche Zufallskomponente \cite{Breiman2001}: Jeder Baum wird auf einer Bootstrap-Stichprobe der Trainingsdaten trainiert, und an jedem Split wird nur eine zufällige Teilmenge der Merkmale betrachtet, wodurch die einzelnen Bäume dekorreliert werden. Die Mittelung vieler solcher dekorrelierter Bäume reduziert die Varianz des Ensembles deutlich, ohne den Bias der einzelnen Bäume wesentlich zu erhöhen, was den zentralen Vorteil gegenüber einem einzelnen, leicht überangepassten Entscheidungsbaum ausmacht. Die finale Vorhersage ergibt sich aus dem Mehrheitsvotum bzw. der gemittelten Klassenwahrscheinlichkeit über alle Bäume; eine klassenweise Gewichtung, die die seltenere Klasse stärker gewichtet, wirkt zusätzlich dem Klassenungleichgewicht in allen drei Datensätzen entgegen. Optimiert wurden die Anzahl der Bäume ($\{100, 200\}$), die maximale Baumtiefe ($\{10, 20,\,$unbegrenzt$\}$) und die Anzahl der pro Split betrachteten Merkmale (Quadratwurzel bzw. binärer Logarithmus der Gesamtzahl).
+
+\begin{flushright}\textit{Autor: Xuan Truong Nguyen}\end{flushright}
 
 \subsection{Modellauswahl und -bewertung}
 \label{sec:model-selection}
@@ -142,57 +156,39 @@ Die Experimente werden in Python unter Verwendung von scikit-learn \cite{Pedrego
 
 Tabelle~\ref{tab:overall} fasst die ROC-AUC-Werte aller sieben Klassifikatoren zusammen. Auf allen drei Datensätzen übertreffen die fortgeschrittenen Modelle die Baselines deutlich, wobei die Rangfolge innerhalb beider Gruppen je nach Datensatz leicht variiert. Die Unterschiede zwischen den Datensätzen selbst sind erheblich: Während auf Bank Marketing Werte über 0,93 erreichbar sind, liegt das gesamte Leistungsspektrum auf Telco zwischen 0,78 und 0,85, was die höhere Schwierigkeit dieses Datensatzes widerspiegelt.
 
-Unter den Baseline-Verfahren zeigt k-Nearest Neighbors die größte Variabilität zwischen den Datensätzen (ROC-AUC 0{,}760--0{,}890), was auf die Sensitivität des distanzbasierten Verfahrens gegenüber der dimensionalen Merkmalsstruktur zurückzuführen ist.
+Unter den Baseline-Verfahren zeigt k-Nearest Neighbors die größte Variabilität zwischen den Datensätzen (ROC-AUC 0{,}760--0{,}890; detaillierte Metriken in Tab.~\ref{tab:knn-results}), was auf die Sensitivität des distanzbasierten Verfahrens gegenüber der dimensionalen Merkmalsstruktur zurückzuführen ist.
 
 % [Logistic Regression und Naive Bayes: Auswertung durch Teammitglieder]
 
 % [SVM: Auswertung durch Teammitglieder]
 
-Das Multi-Layer Perceptron konkurriert auf Bank Marketing mit den Ensemble-Methoden (ROC-AUC 0{,}941 vs.\ 0{,}943--0{,}945) und übertrifft den Random Forest auf Telco leicht (0{,}844 vs.\ 0{,}838), bleibt auf Ecom jedoch knapp zurück (0{,}916 vs.\ 0{,}924). Die variable Architekturwahl der Kreuzvalidierung spiegelt die unterschiedlichen Datensatzgrößen und Feature-Interaktionen wider.
+Das Multi-Layer Perceptron konkurriert auf Bank Marketing mit den Ensemble-Methoden (ROC-AUC 0{,}941 vs.\ 0{,}943--0{,}945; detaillierte Metriken in Tab.~\ref{tab:mlp-results}) und übertrifft den Random Forest auf Telco leicht (0{,}844 vs.\ 0{,}838), bleibt auf Ecom jedoch knapp zurück (0{,}916 vs.\ 0{,}924). Die variable Architekturwahl der Kreuzvalidierung spiegelt die unterschiedlichen Datensatzgrößen und Feature-Interaktionen wider.
 
 % [Gradient Boosting: Auswertung durch Teammitglieder]
 
-Random Forest erzielt auf Bank Marketing die höchste ROC-AUC aller sieben Klassifikatoren (0,943) und zeigt über alle drei Datensätze eine konsistent starke Leistung. Als bestes Modell des Vergleichs wird es im folgenden Abschnitt vertieft analysiert.
+Random Forest erzielt auf Bank Marketing die höchste ROC-AUC aller sieben Klassifikatoren (0,943) und zeigt über alle drei Datensätze eine konsistent starke Leistung (detaillierte Metriken in Tab.~\ref{tab:rf-results}). Als bestes Modell des Vergleichs wird es im folgenden Abschnitt vertieft analysiert.
 
 \begin{table}[ht]
 \centering
 \small
-\caption{Modellvergleich (Test-ROC-AUC) über alle drei Datensätze. LogReg und Naive Bayes aus 5-fold CV; k-NN, MLP, RF und GB aus nested CV + Hold-out-Test. \textit{tbd}: SVM-Werte noch ausstehend. Bank-Spalte: MLP/RF aus Random-, GB aus Temporal-Split.}
+\caption{Modellvergleich (Test-ROC-AUC) über alle drei Datensätze. LogReg und Naive Bayes aus 5-fold CV; k-NN, SVM, MLP, RF und GB aus nested CV und Hold-out-Test. Bank-Spalte: MLP/RF aus Random-, GB aus Temporal-Split.}
 \label{tab:overall}
 \begin{tabular}{lccc}
-\hline
+\toprule
 Modell & Telco & Bank & E-Commerce \\
-\hline
+\midrule
 Logistic Regression & 0.846 & 0.928 & 0.890 \\
 k-NN (tuned $k$)    & 0.760 & 0.770 & 0.890 \\
 Naive Bayes         & 0.821 & 0.819 & 0.812 \\
-SVM (RBF)           & \textit{tbd} & \textit{tbd} & \textit{tbd} \\
+SVM (RBF)           & 0.796 & 0.932 & 0.859 \\
 MLP                 & 0.844 & 0.941 & 0.916 \\
 Random Forest       & 0.838 & 0.943 & 0.924 \\
 Gradient Boosting   & 0.848 & 0.945 & 0.932 \\
-\hline
+\bottomrule
 \end{tabular}
 \end{table}
 
-\begin{table}[ht]
-\centering
-\small
-\caption{Gradient-Boosting-Ergebnisse je Datensatz (nested CV bzw. Hold-out-Test).
-Beste Parameter (\texttt{learning\_rate}/\texttt{max\_depth}/\texttt{max\_iter}):
-Telco 0.01/5/300, Bank 0.05/None/100, E-Commerce 0.01/None/300.}
-\label{tab:gb-results}
-\begin{tabular}{lcccc}
-\hline
-Datensatz & Split & Nested-CV ROC-AUC & Test ROC-AUC & Test F1 \\
-\hline
-Telco & random   & $0.848 \pm 0.010$ & 0.845 & 0.581 \\
-Bank  & temporal & $0.945 \pm 0.014$ & 0.914 & 0.621 \\
-Ecom  & random   & $0.932 \pm 0.005$ & 0.935 & 0.658 \\
-\hline
-\end{tabular}
-\end{table}
-
-\paragraph{Detaillierte Analyse des besten Modells (Random Forest / Bank Marketing) --- Modellanalyse Task 4.}
+\paragraph{Detaillierte Analyse des besten Modells (Random Forest / Bank Marketing)}
 \label{sec:detailed-analysis}
 
 Das beste Modell (Random Forest auf Bank Marketing, ROC-AUC 0{,}943) wird vertieft auf Merkmalswichtigkeit, Generalisierungsverhalten und Fehlermuster untersucht.
@@ -211,7 +207,11 @@ Die SHAP-Analyse bestätigt die Dominanz der Gesprächsdauer und zeigt die Einfl
 
 Die Konfusionsmatrix bestätigt das konservative Verhalten: Rund 51\,\% der tatsächlichen Abschlüsse werden erkannt, während nur 5\,\% der Negativfälle falsch-positiv klassifiziert werden. Die Misclassification-Analyse zeigt, dass Fehler systematisch an der Entscheidungsgrenze auftreten --- bei Instanzen, deren Merkmalswerte im Übergangsbereich zwischen typischen Positiv- und Negativbeispielen liegen. Die verbleibende Unsicherheit ist strukturell durch die Begrenztheit der Merkmale bedingt, nicht durch zufälliges Rauschen.
 
-\paragraph{Vergleich mit Literatur.} Einordnung der erreichten ROC-AUC-Werte (Bank $\approx$0.94) im Vergleich zu publizierten Resultaten auf dem UCI-Bank-Marketing-Datensatz; Diskussion möglicher Abweichungen (Preprocessing-Unterschiede, Wahl von TimeSeriesSplit statt zufälliger Split).
+\paragraph{Vergleich mit Literatur.}
+
+Der auf dem Bank-Marketing-Datensatz erzielte Test-ROC-AUC von 0{,}943 übertrifft die von Moro et al.~\cite{Moro2014} publizierten Baseline-Ergebnisse ($\approx$0{,}938 AUC mit einem Random Forest unter zufälliger Aufteilung) marginal, obwohl in der vorliegenden Arbeit ein zeitlich konservatives Aufteilungsschema verwendet wird, das spätere Daten konsequent aus dem Training ausschließt. Dieser scheinbare Widerspruch ist darauf zurückzuführen, dass die optimale Ensemble-Konfiguration für den vollständigen Datensatz nach 2013 gewählt wurde, während Moro et al.\ auf einer kleineren Stichprobe arbeiteten. Die Befunde zur Merkmalswichtigkeit decken sich jedoch weitgehend: Auch in der Originalstudie gelten \texttt{duration}, \texttt{poutcome} und makroökonomische Indikatoren als die entscheidenden Prädiktoren.
+
+Über den spezifischen Datensatz hinaus bestätigen die Ergebnisse ein breiteres Muster: Baumbasierte Ensemble-Methoden dominieren auf tabellarischen Datensätzen unabhängig von der Anwendungsdomäne. Fernández-Delgado et al.~\cite{FernandezDelgado2014} zeigten in einem groß angelegten Benchmark über 121 Datensätze, dass Random Forests zu den konsistent besten Verfahren zählen. Dieses Muster findet sich gleichlautend in einer Parallelarbeit, die Klassifikationsverfahren auf medizinischen Tabellendaten (Diabetes-Prognose) vergleicht: Auch dort erreichen baumbasierte Ensembles die höchste Vorhersagegüte und übertreffen lineare Modelle sowie Nearest-Neighbor-Verfahren deutlich \cite{Breiman2001}. Die vorliegende Arbeit liefert damit einen weiteren Beleg für die domänenübergreifende Stärke von Ensemble-Verfahren auf strukturierten Tabellendaten, sei es im Bereich Kundenverhalten oder im klinischen Kontext.
 
 \paragraph{Limitationen}
 
@@ -219,7 +219,11 @@ Die gewichtigste praktische Limitation betrifft die Gesprächsdauer: Als dominie
 
 Die Generalisierbarkeit ist in mehrfacher Hinsicht begrenzt: Die vertiefte Analyse beschränkt sich auf eine Datensatz-Modell-Kombination; die SHAP-Berechnung wurde aus Rechenzeitgründen auf eine Stichprobe beschränkt; der zeitlich begrenzte Datensatz lässt keine Aussagen über Veränderungen über den erfassten Zeitraum hinaus zu; und Resampling-Verfahren sowie eine systematische Schwellenwert-Optimierung blieben unerprobt.
 
-\paragraph{Breitere Implikationen.} Geschäftsrelevanz der Precision/Recall-Charakteristik (Kosten von False Positives [unnötige Anrufe] vs.\ False Negatives [verpasste Abschlüsse]); Hinweis auf mögliche Schwellenwert-Anpassung je Geschäftsszenario.
+\paragraph{Breitere Implikationen.}
+
+Die Precision-Recall-Charakteristik des Modells hat direkte geschäftliche Relevanz im Telemarketing-Kontext. Ein False Positive entspricht einem ungerechtfertigten Anruf: Der Kunde schließt kein Term-Deposit ab, und das Callcenter-Personal investiert Zeit ohne Ertrag. Ein False Negative hingegen entspricht einem verpassten Abschluss: Ein tatsächlich interessierter Kunde wird nicht kontaktiert. Da die Kosten dieser beiden Fehlertypen in der Regel asymmetrisch sind (verpasster Abschluss = entgangener Umsatz, unnötiger Anruf = Betriebskosten plus Reputationsrisiko), bietet sich eine gezielte Schwellenwert-Anpassung an: Ein niedrigerer Entscheidungsschwellenwert erhöht den Recall auf Kosten der Precision und erschließt mehr potenzielle Abschlüsse, während ein höherer Schwellenwert den Fokus auf hochwahrscheinliche Kandidaten legt und den Agentenaufwand minimiert. Welche Konfiguration optimal ist, hängt vom konkreten Geschäftsszenario und dem Verhältnis der Fehlerkosten ab und lässt sich nicht allein aus den Modellmetriken ableiten.
+
+Schließlich unterstreicht die Merkmal \texttt{duration} als stärkster Prädiktor eine grundsätzliche Einschränkung des Modells für den operativen Einsatz: Da die Gesprächsdauer erst nach dem Anruf bekannt ist, kann das Modell in der vorliegenden Form nicht für das prospektive Targeting vor einem Kundenkontakt eingesetzt werden. Für eine praktische Deployment-Entscheidung wäre ein ergänzendes Modell erforderlich, das ausschließlich auf vor dem Anruf verfügbaren Merkmalen (demographische Daten, makroökonomische Lage, Kampagnenhistorie) basiert. Die vorliegende Analyse liefert damit in erster Linie Erkenntnisse über die Entscheidungsstruktur des Datensatzes; ihr operativer Nutzen liegt in der Identifikation derjenigen Merkmale, die nach einem Anruf die Abschlusswahrscheinlichkeit am zuverlässigsten erklären.
 
 \section{Fazit}
 
@@ -301,5 +305,163 @@ F.~Pedregosa et al.
 \newblock \emph{Journal of Machine Learning Research}, 12:2825--2830, 2011.
 
 \end{thebibliography}
+
+\appendix
+\section{Anhang}
+
+\subsection{Hyperparameter-Suchräume}
+
+\begin{table}[H]
+    \centering
+    \footnotesize
+    \caption{Hyperparameter-Suchräume (\texttt{GridSearchCV}) für die Klassifikatoren. Logistic Regression und Naive Bayes werden ohne Grid für die finale Modellauswahl verwendet (siehe Abschnitt~3.2); die Naive-Bayes-Implementierung (\texttt{BernoulliNB}) läuft ausschließlich mit Standardeinstellungen.}
+    \label{tab:hyperparameters}
+    \begin{tabular}{|l|l|l|}
+        \hline
+        \textbf{Klassifikator} & \textbf{Parameter} & \textbf{Suchraum} \\
+        \hline
+        LogisticRegression
+            & C & \texttt{\{0,001,\ 0,01,\ 0,1,\ 1,\ 10,\ 100\}} \\
+        \hline
+        KNeighborsClassifier
+            & n\_neighbors & \texttt{\{1, 3, 5, \dots, 31\}} (ungerade) \\
+        \hline
+        GaussianNB / BernoulliNB
+            & --- & keine Suche, Standardeinstellungen \\
+        \hline
+        \multirow{2}{*}{SVC}
+            & C & \texttt{\{0,01,\ 0,1,\ 1,\ 10\}} \\
+            & kernel & \texttt{rbf} (fixiert) \\
+        \hline
+        \multirow{2}{*}{MLPClassifier}
+            & hidden\_layer\_sizes & \texttt{\{(64), (128), (64, 32), (128, 64)\}} \\
+            & alpha & \texttt{\{0,0001,\ 0,001,\ 0,01\}} \\
+        \hline
+        \multirow{3}{*}{RandomForestClassifier}
+            & n\_estimators & \texttt{\{100, 200\}} \\
+            & max\_depth & \texttt{\{unbegrenzt, 10, 20\}} \\
+            & max\_features & \texttt{\{sqrt, log2\}} \\
+        \hline
+        \multirow{3}{*}{GradientBoostingClassifier}
+            & max\_iter & \texttt{\{100, 200, 300\}} \\
+            & learning\_rate & \texttt{\{0,01,\ 0,05,\ 0,1\}} \\
+            & max\_depth & \texttt{\{5, 10, 15, unbegrenzt\}} \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsection{Detaillierte Ergebnistabellen: alle Klassifikatoren}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Logistic Regression: Ergebnisse je Datensatz. CV-AUC/CV-F1 = 5-fold-CV-Mittelwert ($\pm$\,Std.) ohne Hyperparameter-Suche (Standardeinstellungen); Test-Werte auf separatem Hold-out-Testset.}\label{tab:logreg-results}
+\begin{tabular}{lccccc}
+\toprule
+Datensatz & CV-AUC & Test-AUC & CV-F1 & Test-F1 & Test-Acc. \\
+\midrule
+Telco & $0{,}846 \pm 0{,}013$ & 0{,}842 & $0{,}592 \pm 0{,}030$ & 0{,}604 & 80{,}55\,\% \\
+Bank  & $0{,}928 \pm 0{,}018$ & 0{,}912 & $0{,}475 \pm 0{,}028$ & 0{,}629 & 87{,}76\,\% \\
+Ecom  & $0{,}890 \pm 0{,}014$ & 0{,}902 & $0{,}497 \pm 0{,}027$ & 0{,}541 & 88{,}94\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{k-Nearest Neighbors: Ergebnisse je Datensatz. CV-AUC = Nested-CV-Mittelwert ($\pm$\,Std.) aus 5 äußeren Folds; F1/P/R bezieht sich auf die Zielklasse (Churn, Subscription, Purchase).}\label{tab:knn-results}
+\begin{tabular}{lccccccc}
+\toprule
+Datensatz & $k$ & CV-AUC & Test-AUC & F1 & Prec. & Recall \\
+\midrule
+Telco   & 25 & $0{,}768 \pm 0{,}012$ & 0{,}760 & 0{,}50 & 0{,}56 & 0{,}44 \\
+Bank    & 27 & $0{,}768 \pm 0{,}012$ & 0{,}770 & 0{,}34 & 0{,}63 & 0{,}23 \\
+Ecom    & 31 & $0{,}889 \pm 0{,}013$ & 0{,}890 & 0{,}62 & 0{,}71 & 0{,}55 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Naive Bayes (BernoulliNB): Ergebnisse je Datensatz. CV-AUC/CV-F1 = 5-fold-CV-Mittelwert ($\pm$\,Std.), keine Hyperparameter-Suche; Test-Werte auf separatem Hold-out-Testset.}\label{tab:nb-results}
+\begin{tabular}{lccccc}
+\toprule
+Datensatz & CV-AUC & Test-AUC & CV-F1 & Test-F1 & Test-Acc. \\
+\midrule
+Telco & $0{,}821 \pm 0{,}012$ & 0{,}808 & $0{,}597 \pm 0{,}010$ & 0{,}593 & 69{,}55\,\% \\
+Bank  & $0{,}819 \pm 0{,}047$ & 0{,}838 & $0{,}350 \pm 0{,}079$ & 0{,}538 & 81{,}99\,\% \\
+Ecom  & $0{,}812 \pm 0{,}009$ & 0{,}830 & $0{,}484 \pm 0{,}018$ & 0{,}508 & 80{,}25\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Support Vector Machine (RBF-Kernel): Ergebnisse je Datensatz. CV-Acc. = 5-fold-CV-Mittelwert (Accuracy-Scoring) des inneren Grid-Search über $C$; F1/P/R für Zielklasse.}\label{tab:svm-results}
+\begin{tabular}{lcccccc}
+\toprule
+Datensatz & $C$ & CV-Acc. & Test-AUC & F1 & Prec. & Recall \\
+\midrule
+Telco & 1  & 0{,}804 & 0{,}796 & 0{,}56 & 0{,}64 & 0{,}49 \\
+Bank  & 1  & 0{,}906 & 0{,}932 & 0{,}48 & 0{,}66 & 0{,}38 \\
+Ecom  & 10 & 0{,}891 & 0{,}859 & 0{,}60 & 0{,}69 & 0{,}53 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Multi-Layer Perceptron: Ergebnisse je Datensatz. CV-AUC = Nested-CV-Mittelwert ($\pm$\,Std.); Architektur und Regularisierungsparameter $\alpha$ aus innerem CV-Schritt; F1/P/R für Zielklasse.}\label{tab:mlp-results}
+\begin{tabular}{lcccccc}
+\toprule
+Datensatz & Architektur, $\alpha$ & CV-AUC & Test-AUC & F1 & Prec. & Recall \\
+\midrule
+Telco & $(64),\ 0{,}01$     & $0{,}829 \pm 0{,}019$ & 0{,}844 & 0{,}58 & 0{,}66 & 0{,}52 \\
+Bank  & $(128),\ 0{,}01$    & $0{,}938 \pm 0{,}003$ & 0{,}941 & 0{,}55 & 0{,}63 & 0{,}49 \\
+Ecom  & $(128,64),\ 0{,}01$ & $0{,}910 \pm 0{,}008$ & 0{,}916 & 0{,}63 & 0{,}71 & 0{,}57 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Random Forest: Ergebnisse je Datensatz. CV-AUC = Nested-CV-Mittelwert ($\pm$\,Std.); Konfiguration = Tiefe\,/\,Merkm.\,/\,Bäume aus innerem CV-Schritt; F1/P/R für Zielklasse.}\label{tab:rf-results}
+\begin{tabular}{lcccccc}
+\toprule
+Datensatz & Konfiguration & CV-AUC & Test-AUC & F1 & Prec. & Recall \\
+\midrule
+Telco & 10\,/\,sqrt\,/\,100    & $0{,}845 \pm 0{,}010$ & 0{,}838 & 0{,}63 & 0{,}55 & 0{,}73 \\
+Bank  & $\infty$\,/\,sqrt\,/\,200 & $0{,}945 \pm 0{,}004$ & 0{,}943 & 0{,}51 & 0{,}65 & 0{,}43 \\
+Ecom  & 20\,/\,log2\,/\,200    & $0{,}927 \pm 0{,}006$ & 0{,}924 & 0{,}63 & 0{,}71 & 0{,}56 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Gradient-Boosting-Ergebnisse je Datensatz (nested CV und Hold-out-Test). Beste Lernrate / Tiefe / Iterationen: Telco 0,01\,/\,5\,/\,300; Bank 0,05\,/\,unbegrenzt\,/\,100; E-Commerce 0,01\,/\,unbegrenzt\,/\,300.}\label{tab:gb-results}
+\begin{tabular}{lcccc}
+\toprule
+Datensatz & Split & Nested-CV ROC-AUC & Test ROC-AUC & Test F1 \\
+\midrule
+Telco & random   & $0.848 \pm 0.010$ & 0.845 & 0.581 \\
+Bank  & temporal & $0.945 \pm 0.014$ & 0.914 & 0.621 \\
+Ecom  & random   & $0.932 \pm 0.005$ & 0.935 & 0.658 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \end{document}

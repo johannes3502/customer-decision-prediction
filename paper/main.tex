@@ -1,0 +1,733 @@
+%\pdfoutput=1
+\documentclass[10pt]{scrartcl}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman,english]{babel}
+\usepackage{tabto}
+%\usepackage{refcheck}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{csquotes}
+\usepackage{multirow}
+\setkomafont{author}{\small} 
+\usepackage{hyperref}
+\usepackage{graphicx}
+
+\usepackage{siunitx}
+\sisetup{
+  table-number-alignment = center,
+  table-format=1.3 % Standardformat; kann je Tabelle überschrieben werden
+}
+
+%table
+\usepackage{tabularx} % Wichtig für die Tabelle mit fester Breite
+\usepackage{ragged2e} % Für \RaggedRight in tabularx-Spalten
+\usepackage{booktabs}
+
+% Eigene Spaltentypen für tabularx (wenn noch nicht vorhanden)
+\newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+
+
+\begin{document}
+\title{\LARGE Machine Learning zur Diabetesklassifikation: Ein systematischer Vergleich auf heterogenen Gesundheitsdatensätzen}
+\author{
+	Florian Eber (xxx)\\
+	Lukas Bumes (xxx)\\
+	Lorenz Schenkel (xxx)\\
+	Michael Strahl (xxx)
+}
+\date{}
+\maketitle
+
+
+
+
+\begin{abstract}
+Dieses Paper adressiert die automatisierte Klassifikation von Diabetes auf drei realen, heterogenen Datensätzen (BRFSS 2023 Survey, Diabetes prediction dataset, Iraqi society dataset). Wir entwickeln eine einheitliche ML-Pipeline mit medianbasierter Imputation, Standardisierung, Label-/Ordinal-Encoding und optionalem SMOTE-Oversampling und vergleichen sieben Modelle (LogReg, k-NN, Gaussian NB, SVM, MLP, Random Forest, (X)GBoost). Hyperparameter werden via stratified Cross-Validation in Kombination mit RandomizedSearchCV abgestimmt. Durch SMOTE+Tomek steigt das Macro-F1 auf BRFSS 2023 Survey von 0,714 auf 0,730 (+2,2\%) und auf Diabetes prediction dataset von 0,8578 auf 0,8955 (+4,4\%). Auf dem Iraqi society dataset erreichen wir dank XGBoost 0,9825. Die finalen Macro-F1-Scores liegen damit bei 0,730, 0,8955 und 0,9825, was die Robustheit ensemble-basierter Verfahren bei realistischen Gesundheitsdaten bestätigt.
+\end{abstract}
+\begin{flushright}
+  \footnotesize\textit{Florian Eber}
+\end{flushright}
+
+
+\newpage
+
+
+\section{Einleitung}
+
+Die frühzeitige Erkennung von Diabetes spielt eine zentrale Rolle in der öffentlichen Gesundheitsversorgung. Als chronische Stoffwechselerkrankung mit weltweit steigender Prävalenz birgt Diabetes nicht nur individuelle Gesundheitsrisiken, sondern verursacht auch erhebliche gesellschaftliche und wirtschaftliche Belastungen. Umso bedeutender ist die Entwicklung von präzisen und skalierbaren Verfahren zur Identifikation potenziell betroffener Personen, insbesondere im Rahmen großer populationsbasierter Erhebungen. Maschinelles Lernen (ML) bietet hier vielversprechende Ansätze, um aus heterogenen, hochdimensionalen Gesundheitsdaten Muster zu extrahieren, die auf ein erhöhtes Erkrankungsrisiko hinweisen können.
+
+\subsection{Relevanz automatisierter Klassifikationssysteme}
+Die Relevanz automatisierter Klassifikationssysteme ergibt sich dabei nicht nur aus ihrer diagnostischen Leistungsfähigkeit, sondern auch aus ihrem Potenzial zur Verbesserung von Screening-Programmen und zur effizienteren Allokation medizinischer Ressourcen. Gerade in Bevölkerungsgruppen mit eingeschränktem Zugang zu ärztlicher Versorgung können datengetriebene Entscheidungshilfen zur frühzeitigen Identifikation und Intervention beitragen. Der Einsatz von ML-Verfahren zur Diabetesvorhersage ist daher nicht nur technisch anspruchsvoll, sondern auch gesundheitspolitisch hochrelevant.
+
+\subsection{Aktueller Forschungsstand und bestehende Lücken}
+Frühere Arbeiten zur Diabetesklassifikation basieren oft auf idealisierten, synthetischen oder stark bereinigten Datensätzen wie dem PIMA-Indian-Dataset\cite{Abousaber2025}. Zwar lassen sich mit klassischen Modellen wie Random Forest oder Support Vector Machines teils hohe Genauigkeiten erzielen, doch zeigen sich deren Grenzen häufig bei realweltlichen, unausgeglichenen und hochdimensionalen Daten. Auch Deep-Learning-Ansätze liefern teils beachtliche Ergebnisse, sind aber oft wenig interpretierbar und benötigen große Datenmengen. Insgesamt besteht eine Lücke im systematischen Vergleich etablierter Klassifikationsverfahren auf praxisnahen, heterogenen Gesundheitsdatensätzen.
+
+\subsection{Zielsetzung dieser Arbeit}
+In dieser Arbeit wird die Leistungsfähigkeit klassischer und moderner Machine-Learning-Modelle zur automatisierten Klassifikation von Diabetes untersucht. Hierzu werden drei öffentlich verfügbare, tabellarische Datensätze herangezogen (BRFSS 2023 Survey, Diabetes prediction dataset, Iraqi society dataset), die sich hinsichtlich Datenumfang, Feature-Typen und Zielklassenstruktur unterscheiden. Es werden einheitliche Modellierungs-Pipelines entwickelt, die Missing-Value-Imputation, Feature-Skalierung, Label-Encoding und Resampling-Verfahren kombinieren. Insgesamt werden sieben ML-Modelle getestet und im Rahmen einer standardisierten Evaluierungsstrategie miteinander verglichen.
+
+\subsection{Zusammenfassung der Ergebnisse}
+Die Ergebnisse zeigen, dass Gradient Boosting und verwandte Ensemble-Methoden auf allen drei Datensätzen die besten Klassifikationsleistungen erzielen. Eine ablationbasierte Untersuchung einzelner Pipeline-Komponenten (z.B. Skalierung oder SMOTE-Oversampling) bestätigt deren Einfluss auf die Modellgüte. Die finale Testbewertung ergibt F1-Macro-Scores von 0{,}730 (BRFSS 2023 Survey), 0{,}8955 (Diabetes prediction dataset) und 0{,}9825 (Iraqi society dataset), was auf die hohe Robustheit ensemble-basierter Verfahren unter realistischen Bedingungen hinweist. Die Arbeit leistet damit einen Beitrag zur Bewertung der Generalisierbarkeit und Praxistauglichkeit maschineller Lernverfahren im medizinischen Klassifikationskontext.
+
+
+\begin{flushright}
+  \footnotesize\textit{Lukas Bumes}
+\end{flushright}
+
+
+
+
+\section{Verwandte Arbeiten}
+Dieser Abschnitt beleuchtet den aktuellen Forschungsstand zur Diabetesklassifikation mittels Maschinellem Lernen. Der Fokus liegt auf der Evolution der Methoden und den damit verbundenen Herausforderungen.
+
+\subsection{Evolution der Klassifikationsverfahren für Diabetes}
+
+Die initiale Forschung nutzte primär klassische ML-Modelle. Phongying und Hiriote (2023) zeigten die Stärke von Random Forest mit Wechselwirkungstermen für hohe Genauigkeiten (97,5~\% Accuracy) in Krankenhausdatensätzen \cite{Phongying2023}. Jiang et al. (2024) setzten fortgeschrittene Ensemble-Verfahren (u.\,a. XGBoost, LightGBM) mit SMOTE auf dem großen BRFSS 2023 Survey ein, erreichten konsistente Ergebnisse (Accuracy $\approx 80$~\%) \cite{Jiang2024}.
+
+Jüngst gewinnen Deep Learning (DL) und hybride Ansätze stark an Bedeutung, da sie oft traditionelle Methoden übertreffen. Khan et al. (2024) kombinierten klassische ML-Verfahren mit DL-Modellen wie TabNet für hohe Genauigkeiten (bis zu 98~\%) \cite{Khan2024}. Abousaber et al. (2025) adressierten die Problematik unausgewogener Datensätze und erzielten mit SMOTE/ADASYN und optimierten Ensemble-Modellen auf mehreren öffentlichen Diabetes-Datensätzen teilweise perfekte Klassifikationswerte (100~\% auf dem PIMA-Datensatz) \cite{Abousaber2025}. Die Generalisierbarkeit solch extremer Ergebnisse auf reale Daten ist jedoch kritisch zu hinterfragen, da sie auf Überanpassung hindeuten kann.
+
+Modellinterpretierbarkeit und die Vergleichbarkeit von Studienergebnissen gewinnen zunehmend an Bedeutung. Kaliappan et al. (2024) analysierten Random Forest und XGBoost auf vier verschiedenen Datensätzen und nutzten Erklärbarkeitsmethoden wie SHAP und LIME, um die wichtigsten Prädiktoren (z.\,B. BMI, Alter, Polydipsie) zu identifizieren und Modellentscheidungen nachvollziehbar zu machen \cite{Kaliappan2024}. Eine bibliometrische Analyse von Kiran et al. (2025) über 33 Jahre Forschung bestätigt den Trend zu Ensemble-, DL- und erklärbarer KI (XAI)-Methoden. Sie weist zudem darauf hin, dass trotz etablierter Metriken die Vergleichbarkeit zwischen Studien aufgrund stark variierender Datensätze und Evaluierungsprotokolle erschwert bleibt \cite{Kiran2025}.
+
+\subsection{Fazit und Beitrag der vorliegenden Arbeit}
+Die Literatur bestätigt das Potenzial von Machine Learning in der Diabetes-Klassifikation. Kernprobleme sind begrenzte Generalisierbarkeit von Modellen aus idealisierten Datensätzen und schlechte Vergleichbarkeit von Studien. Unsere Arbeit setzt hier an: Wir untersuchen systematisch die Leistungsfähigkeit klassischer und moderner ML-Modelle auf drei unterschiedlichen Datensätzen, um Robustheit und Generalisierbarkeit zu verbessern.
+
+\begin{flushright}
+  \footnotesize\textit{Lorenz Schenkel}
+\end{flushright}
+
+
+
+
+
+\section{Methoden}
+\subsection{Funktionsweise des besten Modells - Gradient Boosting}
+
+Gradient Boosting ist ein Ensemble-Verfahren, das mehrere einfache Entscheidungsmodelle schrittweise kombiniert, um ein leistungsfähigeres Gesamtmodell zu erzeugen. Es gehört zur Familie der sogenannten Boosting-Methoden, deren zentrale Idee darin besteht, schwache Modelle sequentiell zu trainieren und deren Fehler in den folgenden Iterationen gezielt zu korrigieren. Im Folgenden wird dieser Prozess im Detail erläutert.
+
+\subsubsection{Grundprinzip}
+
+Das Grundprinzip von Gradient Boosting besteht darin, ein Vorhersagemodell $F(x)$ als Summe vieler einfacher Teilmodelle $h_m(x)$ zu konstruieren:
+
+\[
+F_M(x) = \sum_{m=1}^{M} \eta \cdot h_m(x)
+\]
+
+Dabei ist:
+\begin{itemize}
+    \item $h_m(x)$ ein schwacher Lernalgorithmus (z.~B. ein kleiner Entscheidungsbaum),
+    \item $\eta$ eine Lernrate (meist ein Wert zwischen 0{,}01 und 0{,}1),
+    \item $M$ die Gesamtanzahl der Iterationen (bzw. Bäume).
+\end{itemize}
+
+Das Verfahren beginnt typischerweise mit einem konstanten Anfangsmodell (z.~B. dem Mittelwert der Zielvariable). In jeder Iteration wird ein neues Modell so trainiert, dass es die Fehler (genauer: die negativen Gradienten der Verlustfunktion) des bisherigen Modells am besten ausgleicht.
+
+\subsubsection{Lernen über Gradienten}
+
+Der Name \textit{Gradient Boosting} stammt daher, dass das Modell in Richtung des negativen Gradienten der Verlustfunktion angepasst wird. Bei Klassifikationsproblemen mit zwei Klassen verwendet man häufig die logistische Verlustfunktion:
+
+\[
+L(y, F(x)) = - \left[ y \cdot \log(p(x)) + (1 - y) \cdot \log(1 - p(x)) \right]
+\quad \text{mit} \quad p(x) = \sigma(F(x))
+\]
+
+Hierbei ist $\sigma$ die Sigmoidfunktion, die das Modell $F(x)$ in eine Wahrscheinlichkeitsverteilung abbildet. In jeder Iteration werden die sogenannten \emph{Pseudo-Residuen} berechnet, also die negativen Gradienten der Verlustfunktion in Bezug auf das aktuelle Modell. Diese Pseudo-Residuen dienen als Zielwerte für das nächste Teilmodell.
+
+\subsubsection{Trainingsschritte im Detail}
+
+Der vollständige Trainingsprozess lässt sich wie folgt zusammenfassen:
+
+\begin{enumerate}
+    \item \textbf{Initialisierung:} Beginne mit einem einfachen Modell, z.~B. dem Log-Odds der Zielverteilung.
+    \item \textbf{Iterativer Aufbau:}
+    \begin{itemize}
+        \item Berechne die Pseudo-Residuen für alle Trainingsbeispiele.
+        \item Trainiere einen neuen Entscheidungsbaum $h_m(x)$, der diese Residuen approximiert.
+        \item Aktualisiere das Modell:
+        \[
+        F_m(x) = F_{m-1}(x) + \eta \cdot h_m(x)
+        \]
+    \end{itemize}
+    \item \textbf{Abbruch:} Nach einer definierten Anzahl an Iterationen oder sobald sich die Modellleistung auf einem Validierungsdatensatz nicht mehr verbessert (z.~B. durch \textit{Early Stopping}).
+\end{enumerate}
+
+\subsubsection{Hyperparameter und Regularisierung}
+
+Gradient Boosting bietet eine Vielzahl an einstellbaren Hyperparametern, darunter:
+
+\begin{itemize}
+    \item \textbf{Anzahl der Bäume} ($n\_estimators$): Wie viele schwache Modelle werden insgesamt trainiert?
+    \item \textbf{Lernrate} ($learning\_rate$): Wie stark fließt jeder Baum in das Gesamtmodell ein?
+    \item \textbf{Maximale Baumtiefe} ($max\_depth$): Wie tief dürfen die Entscheidungsbäume maximal wachsen?
+    \item \textbf{Subsampling} ($subsample$): Anteil der Trainingsdaten, die pro Baum zufällig verwendet werden.
+    \item \textbf{Merkmals-Subsampling} ($colsample\_bytree$): Anteil der Merkmale, die pro Baum verwendet werden.
+\end{itemize}
+
+Diese Parameter wirken als Regularisierung und helfen, Überanpassung (\textit{Overfitting}) zu vermeiden. Besonders kleine Lernraten in Kombination mit vielen Bäumen gelten als robust.
+
+\subsubsection{Vorteile und Besonderheiten}
+
+Gradient Boosting überzeugt durch seine Fähigkeit, komplexe Zusammenhänge und nichtlineare Wechselwirkungen zwischen Merkmalen zu modellieren. Es ist robust gegenüber Ausreißern, unterstützt numerische und kategoriale Daten (nach entsprechender Kodierung) und erlaubt eine feingranulare Kontrolle der Modellkomplexität.
+
+Typische Vorteile gegenüber anderen Klassifikatoren:
+
+\begin{itemize}
+    \item \textbf{Hohe Leistung auf tabellarischen Daten}
+    \item \textbf{Geringe Vorverarbeitungsanforderungen} (z.~B. keine zwingende Normalisierung)
+    \item \textbf{Hohe Interpretierbarkeit durch Feature Importance}
+\end{itemize}
+
+Allerdings ist Gradient Boosting rechenintensiv und empfindlich gegenüber einer schlechten Parameterauswahl. Eine sorgfältige Hyperparameteroptimierung (z.~B. durch Kreuzvalidierung) ist deshalb essenziell.
+
+\begin{flushright}
+  \footnotesize\textit{Lukas Bumes}
+\end{flushright}
+
+
+
+
+
+
+\section{Experimente}
+\label{sec:experiments}
+Die Experimente zielen darauf ab, die Leistungsfähigkeit verschiedener Klassifikationsmodelle zur Diabetesvorhersage auf drei öffentlich verfügbaren Datensätzen zu vergleichen. Ein besonderer Fokus liegt dabei auf dem Umgang mit unausgeglichenen Daten.
+
+\subsection{Datenbasis}
+Alle Datensätze liegen in tabellarischer Form vor und enthalten entweder eine binäre oder eine dreiklassige Zielvariable. Die Merkmale stammen aus medizinischen, demografischen und verhaltensbezogenen Bereichen.
+
+\subsubsection{Diabetes Prediction Dataset (Mustafa, Diabetes prediction dataset)}
+\label{sec:diabetes_prediction_dataset}
+Der Diabetes prediction dataset \cite{mustafa2023} enthält 100.000 Einträge mit einer binären Zielvariable, die zwischen Diabetes und No Diabetes unterscheidet. Fehlende Werte lagen nicht vor. Die Gesamtverteilung der Zielklassen beträgt 91,5 \% Nicht-Diabetiker und 8,5 \% Diabetiker (siehe Abbildung \ref{fig:kaggle_class_distribution}). 
+
+\subsubsection{Diabetes Dataset (Rashid, Iraqi society dataset)}
+\label{sec:iraqi_society_dataset}
+Der Iraqi society dataset \cite{rashid2020} enthält 1.000 Messpunkte aus irakischen Krankenhäusern. Die Zielvariable ist dreiklassig und unterscheidet No Diabetes, Prä-Diabetes und Diabetes. Die Gesamtverteilung der Zielklassen liegt bei 84,4 \% Diabetikern, 10,3 \% Nicht-Diabetikern und 5,3 \% Prä-Diabetikern (siehe Abbildung \ref{fig:mendeley_class_distribution}).
+
+\subsubsection{Diabetes Health Indicators Dataset (CDC BRFSS 2023 Survey)}
+\label{sec:brfss23}
+Der aktuelle BRFSS 2023 Survey (2023) \cite{BRFSS2023} umfasst 433\,323 Einträge aus fast allen US-Bundesstaaten. Die Zielvariable unterscheidet No Diabetes, Prä-Diabetes und Diabetes. Die Gesamtverteilung liegt bei 94,4 \% Nicht-Diabetikern, 0,5 \% Prä-Diabetikern und 5,1 \% Diabetikern (siehe Abbildung \ref{fig:brfss_class_distribution}). Dieser Datensatz wurde direkt genutzt, nachdem es mit einer älteren, bereits vorverarbeiteten Version (Quelle \cite{cdc2021}) anfangs zu Problemen kam.
+
+\begin{flushright}
+  \footnotesize\textit{Florian Eber}
+\end{flushright}
+
+\subsubsection{Herausforderung}
+Die drei Datensätze weisen jeweils charakteristische Eigenarten auf, die sowohl die Vorverarbeitungsstrategien als auch die Modellwahl beeinflussen. Wie in den Feature-Korrelationsmatrizen (siehe Anhang, Abbildungen \ref{fig:brfss_correlation_matrix}, \ref{fig:kaggle_correlation_matrix} und \ref{fig:mendeley_correlation_matrix}) ersichtlich, unterscheiden sich die Datensätze erheblich in ihrer Merkmalskomplexität und -struktur. Das ausgeprägte Klassenungleichgewicht (siehe Anhang, Abbildungen \ref{fig:brfss_class_distribution}, \ref{fig:kaggle_class_distribution} und \ref{fig:mendeley_class_distribution}) stellt eine zentrale Herausforderung dar, die durch gezielte Resampling-Strategien adressiert wird.
+
+\begin{flushright}
+  \footnotesize\textit{Michael Strahl}
+\end{flushright}
+
+
+
+\subsection{Setup}
+Die Durchführung der Experimente erfolgte unter Verwendung der Programmiersprache Python (Version 3.10.12). Die Modellentwicklung und -evaluierung basierte primär auf den Bibliotheken scikit-learn (Version 1.3.0) und imbalanced-learn (Version 0.11.0). Zur Datenmanipulation wurden pandas (Version 2.0.3) und numpy (Version 1.25.2) eingesetzt, während matplotlib (Version 3.7.2) und seaborn (Version 0.12.2) für die Visualisierung genutzt wurden. Die Reproduzierbarkeit aller Experimente wurde durch die konsistente Verwendung eines globalen Random State gewährleistet.
+
+\subsubsection{Datenaufbereitung}
+\label{sec:datenaufbereitung}
+
+Die Datenaufbereitung umfasste mehrere Schritte, um die Datensätze für die Modellierung vorzubereiten. Die Verteilung der Daten in Trainings-, Validierungs- und Testsets erfolgte stratifiziert, um die ursprünglichen Klassenproportionen beizubehalten.
+
+Für die Datensätze Diabetes Prediction \cite{mustafa2023} und BRFSS 2023 Survey \cite{BRFSS2023} erfolgte die initiale Aufteilung mit einem festen Zufalls-Seed von 42. Dabei wurden 20\% der Gesamtstichprobe als kombiniertes Trainings-/Validierungsset und 5\% als separates Testset abgetrennt. Die verbleibenden 75\% der Daten wurden aufgrund der Datensatzgröße zur Reduktion der Rechenzeit nicht verwendet. Das kombinierte Trainings-/Validierungsset wurde anschließend im Verhältnis 80:20 weiter unterteilt (ebenfalls stratifiziert), was zu finalen Anteilen von 16\% der Gesamtstichprobe für das Training und 4\% für die Validierung führte.
+
+Für den Iraqi Society Dataset \cite{rashid2020} wurde aufgrund seiner geringeren Größe eine abweichende Aufteilung gewählt: 70\% der Daten bildeten das kombinierte Trainings-/Validierungsset, während die restlichen 30\% als Testset abgetrennt wurden. Aus diesem Trainings-/Validierungsset wurden anschließend 80\% für das Training und 20\% für die Validierung reserviert.
+
+Fehlende Werte traten nur im BRFSS-Datensatz auf, sodass die folgenden Schritte den Diabetes prediction dataset und Iraqi society dataset nicht wesentlich beeinflussten. Die Behandlung fehlender Werte erfolgte dabei nach Variablentyp. Für kategorische Merkmale wurden fehlende Werte durch die Einführung einer neuen Kategorie „Unknown“ ersetzt. Dieser Ansatz ermöglichte es, die Information über das Fehlen eines Wertes als eigenständiges Merkmal zu nutzen. Bei numerischen Merkmalen wurde eine Median-Imputation durchgeführt und für den BRFSS-Datensatz wurden insbesondere Nulleinträge in den Merkmalen BMI, PhysHlth und MentHlth als fehlende Werte behandelt und entsprechend imputiert. Zeilen, in denen der Wert der Zielvariablen fehlte, wurden schließlich vollständig entfernt. 
+
+Numerische Merkmale wurden mittels StandardScaler skaliert. Der StandardScaler wurde dabei ausschließlich auf den Trainingsdaten trainiert und anschließend auf die Trainings-, Validierungs- und Testdaten angewendet. Dies ist entscheidend, da viele Machine-Learning-Algorithmen (insbesondere distanz- oder gradientenbasierte Verfahren wie Support Vector Machines, k-Nächste-Nachbarn oder neuronale Netze) besser performen und schneller konvergieren, wenn die Features auf einer vergleichbaren Skala liegen \cite{sklearn_user_guide_ch7_3_1}.
+
+Kategoriale Merkmale wurden in numerische Repräsentationen überführt. Hierbei wurden einige spezifische Features manuell mittels Label- oder Ordinal-Encoding kodiert. Im Iraqi society dataset wurden 'Gender' (Female=0, Male=1) und 'Class' (N=0, P=1, Y=2 (Negativ, Pre-Diabetes, Positiv)) zugeordnet. Für den Diabetes Prediction-Datensatz wurden 'Gender' (Female=0, Male=1) und 'Smoking History' (never=0, no info=1, current=2, former=3) entsprechend umgewandelt.
+
+
+Das in allen Datensätzen vorhandene Klassenungleichgewicht wurde durch die Anwendung von Oversampling-Verfahren auf den Trainingsdaten adressiert. Für die Datensätze Diabetes Prediction und Iraqi Society kam dabei direkt SMOTE (Synthetic Minority Over-sampling Technique) zum Einsatz \cite{Chawla2002}. Alle hierfür verwendeten Sampling-Methoden wurden mit einem festen Zufalls-Seed von 42 initialisiert, um die Reproduzierbarkeit zu gewährleisten.
+
+Beim BRFSS-Datensatz hingegen wurde eine umfassendere Strategie verfolgt: Hierfür wurden initial verschiedene Sampling-Methoden wie ADASYN, BorderlineSMOTE und SMOTE+Tomek mit einem schnellen Random Forest Klassifikator untersucht, um die effektivste Strategie zu identifizieren. Diese Untersuchung erfolgte mittels einer schnellen 3-fachen Kreuzvalidierung, um die bestperformante Methode basierend auf dem F1-Macro-Score zu ermitteln. Basierend auf dieser Evaluation wurde \textit{SMOTE + Tomek}, eine Kombination aus Synthetic Minority Over-sampling Technique und Tomek Links \cite{Tomek1976}, mit einem festen Zufalls-Seed von 42 als primäre Methode für den BRFSS-Datensatz gewählt.
+
+Die jeweils genutzte Oversampling-Methode (SMOTE oder SMOTE+Tomek) wurde stets innerhalb der Modell-Pipeline nach der Skalierung der Daten angewendet. Für die Modelle Logistic Regression und SVC wurde zusätzlich eine automatische Gewichtung der Klassen aktiviert, um dem Ungleichgewicht entgegenzuwirken.
+
+
+\subsubsection{Modell-Pipelines und Hyperparameter-Optimierung}
+
+
+Hierfür wurden initial verschiedene Sampling-Methoden wie \textit{ADASYN} \cite{He2008}, \textit{BorderlineSMOTE} \cite{Han2005} und \textit{SMOTE+Tomek} mit einem schnellen Random Forest Klassifikator untersucht, um die effektivste Strategie zu identifizieren.
+
+Um eine konsistente Anwendung der Vorverarbeitungsschritte und Klassifikatoren zu gewährleisten, wurden die Modelle innerhalb von \texttt{imblearn.pipeline.Pipeline}-Objekten gekapselt. Diese Pipelines integrierten zunächst den \texttt{StandardScaler}, mit Ausnahme des \texttt{GaussianNB}-Klassifikators, und darauf folgend die entsprechende    Over- sampling-Methode, bevor der eigentliche Klassifikator zur Anwendung kam.
+
+
+Die Optimierung der Hyperparameter erfolgte mittels \texttt{RandomizedSearchCV} unter Nutzung paralleler Verarbeitung. Die Kreuzvalidierungsfaltung wurde stets stratifiziert und mit einem festen Zufalls-Seed von 42 initialisiert. Für die einfache Kreuzvalidierung, welche auf Datensätze ohne die Notwendigkeit einer Nested Cross-Validation angewendet wurde, kamen dabei 3 Iterationen und 3 Folds zum Einsatz. Im Falle der Nested Cross-Validation, die speziell für den Iraqi Society Dataset durchgeführt wurde, umfasste die äußere Schleife 5 Folds, während die innere Schleife über \newline \texttt{RandomizedSearchCV} mit 10 Iterationen und 3 Folds optimiert wurde. Als Optimierungsmetrik diente stets der \texttt{f1\_macro}-Score. Die spezifischen Hyperparameter-Suchräume für jeden Klassifikator sind in Tabelle \ref{tab:hyperparameters} im Anhang aufgeführt.
+
+
+\subsubsection{Validierungs- \& Bewertungsprotokoll}
+Die Modellbewertung nutzte stratifizierte Kreuzvalidierung, um sicherzustellen, dass die Zielklassenproportionen in jedem Fold denen des Gesamtdatensatzes entsprechen. Diese Methode führt insbesondere bei unausgeglichenen Klassen zu robusteren Leistungsschätzungen \cite{sklearn_stratified_kfold}. Für die großvolumigen Datensätze BRFSS 2023 Survey und Diabetes prediction dataset wurde eine 3-fache StratifiedKFold-Kreuzvalidierung zur Leistungsschätzung und Hyperparameter-Optimierung eingesetzt. Beim kleineren Iraqi society dataset kam eine Nested-Kreuzvalidierung zum Einsatz, bestehend aus einer äußeren 5-fachen und einer inneren 3-fachen StratifiedKFold-Schleife, um eine verzerrungsärmere Hyperparameterschätzung zu gewährleisten. Die Performance der Modelle wurde anhand einer umfassenden Auswahl von Metriken bewertet: Accuracy, Macro-averaged Precision, Macro-averaged Recall, Macro-averaged F1-Score, Balanced Accuracy und ROC-AUC (One-vs-Rest). Aufgrund der Klassenungleichgewichte war der Macro-F1-Score die primäre Metrik zur Modellselektion. Diese Metrik ist besonders geeignet, da sie sowohl Precision als auch Recall für jede Klasse berücksichtigt und dann über alle Klassen mittelt \cite{sklearn_f1_score}. Die finale Generalisierungsfähigkeit der optimierten Modelle wurde auf dem initial abgetrennten, ungesehenen Testdatensatz evaluiert, einschließlich der Erstellung von Konfusionsmatrizen.
+
+\begin{flushright}
+  \footnotesize\textit{Lorenz Schenkel}
+\end{flushright}
+
+
+
+
+\subsubsection{Ablation Studie}
+Eine Ablationsstudie wurde für jeden Datensatz am jeweils bestperformenden Baseline-Modell durchgeführt, um den Einfluss spezifischer Pipeline-Komponenten zu isolieren. Getestet wurden drei Varianten: die vollständige Pipeline, eine Pipeline ohne SMOTE-Schritt und eine Pipeline ohne StandardScaler-Schritt. Die letze Variante wurde ausschließlich für baumbasierte Modelle (Random Forest, Gradient-Boosting) ausgewertet, da distanz- bzw. gradientenbasierte Verfahren (SVM, k-NN, MLP, Logistic Regression) ohne Skalierung nicht stabil konvergieren. Jede dieser Varianten wurde erneut mittels 3-facher stratifizierter Kreuzvalidierung und Hyperparameter-Optimierung mit 3 Iterationen bewertet. Für den Iraqi society dataset wurde dabei von der Nested-Kreuzvalidierung der ursprünglichen Hauptanalyse abgewichen, um eine konsistente Bewertungsmethodik innerhalb der Ablationsstudie für alle Datensätze zu gewährleisten.
+
+\begin{flushright}
+  \footnotesize\textit{Florian Eber}
+\end{flushright}
+
+
+
+
+
+
+\subsection{Ergebnisse und Diskussion}
+\label{sec:results_discussion}
+
+Die drei Datensätze - BRFSS 2023 Survey, Diabetes prediction dataset und Iraqi society dataset - lieferten konsistent starke Resultate. In allen Fällen setzte sich ein Gradient-Boosting-basiertes Verfahren bzw. \emph{XGBoost} (in Kombination mit Resampling) durch. Die detaillierten Modellvergleiche und Optimierungsergebnisse sind im Anhang dargestellt (Abbildungen \ref{fig:brfss_advanced_comparison}, \ref{fig:kaggle_advanced_comparison} und \ref{fig:mendeley_advanced_comparison} für die finalen Vergleiche sowie Abbildungen \ref{fig:brfss_top3_models}, \ref{fig:kaggle_top3_models} und \ref{fig:mendeley_top3_models} für die Top-3 Modelle).
+
+\begin{table}[htbp]
+  \centering
+  \caption{Übersicht der Bestmodelle pro Datensatz}
+  \label{tab:bestmodels}
+  \begin{tabular}{l l S[table-format=1.3] S[table-format=1.4]}
+    \toprule
+    \textbf{Datensatz} & \textbf{Siegermodell} & {\textbf{F1-Macro}} & {\textbf{Accuracy}} \\
+    \midrule
+    BRFSS 2023 Survey & SMOTE+Tomek +\;GB & 0.730 & 0.9941 \\
+    Diabetes prediction dataset     & Gradient Boosting  & 0.896 & 0.9696 \\
+    Iraqi society dataset   & XGBoost           & 0.983 & 0.9933 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsubsection{Detailanalyse pro Datensatz}
+
+\paragraph{BRFSS 2023 Survey.}
+Durch die Kombination aus SMOTE-Oversampling und einem Tomek‑Links‑Cleaning konnte das Klassengleichgewicht verbessert werden. Das resultierende Gradient‑Boosting‑Ensemble erzielte 0{,}730 F1‑Macro und damit rund 2,2\% höher als der Baseline. Die sehr hohe Accuracy von 99,4\% zeigt, dass der Leistungsgewinn nicht auf Kosten zusätzlicher Fehlklassifikationen erzielt wurde. Eine umfassende Analyse aller Metriken und Modellvergleiche findet sich in Abbildung \ref{fig:brfss_comprehensive}.
+
+\paragraph{Diabetes prediction dataset.}
+Ein optimiertes Gradient-Boosting-Modell erreichte 0,8955 F1-Macro, was eine Verbesserung von 4,4\% gegenüber dem ursprünglichen Gradient-Boosting-Modell (0,8578) darstellt. Obwohl XGBoost nahezu gleichauf lag (0,8723), zeigte es eine stärkere Tendenz zum Overfitting. Ein Voting-Ensemble verbesserte die Robustheit, konnte aber die Spitzenleistung nicht übertreffen. Die detaillierte Modellanalyse ist in Abbildung \ref{fig:kaggle_comprehensive} dargestellt.
+
+\paragraph{Iraqi society dataset.}
+Auf diesem kleineren Datensatz erzielte XGBoost den exzellenten Spitzenwert von 0,9825 F1-Macro. Resampling-Verfahren waren hier aufgrund der bereits guten Klassenverteilung weniger entscheidend; der Gewinn resultierte vor allem aus optimierter Hyperparameter-Abstimmung. Die umfassende Leistungsanalyse zeigt Abbildung \ref{fig:mendeley_comprehensive}.
+
+\subsubsection{Metrik-basierte Interpretation}
+
+\begin{itemize}
+  \item Der Zuwachs von BRFSS 2023 Survey \(\rightarrow\) Diabetes prediction dataset (\(+0{,}17\) F1) und Diabetes prediction dataset \(\rightarrow\) Iraqi society dataset (\(+0{,}09\) F1) verläuft proportional zur Datenqualität (weniger Label-Noise, höhere Feature-Dichte).
+  \item Obwohl BRFSS 2023 Survey und Iraqi society dataset nahezu identische Accuracies (\(\approx 0{,}994\)) aufweisen, differiert der F1-Macro-Wert deutlich. Das unterstreicht, dass Accuracy bei stark unausgeglichenen Klassen kein verlässlicher Hauptindikator ist.
+\end{itemize}
+
+\subsubsection{Vergleich mit Literatur}
+
+\begin{table}[htbp]
+  \centering
+  \caption{F1-Macro unserer besten Modelle im Vergleich zu je einer aktuellen Studie auf demselben Datensatz.}
+  \label{tab:lit_compare}
+  \begin{tabular}{l
+                  S[table-format=1.4]
+                  l
+                  S[table-format=1.3]}
+    \toprule
+    \textbf{Datensatz} &
+    {\textbf{Unser F1}} &
+    \textbf{Vergleichsstudie} &
+    {\textbf{F1 der Studie}} \\  % hier \\ statt \
+    \midrule
+    BRFSS 2023 Survey & 0.7300 & Jiang et al.\ (2024)\cite{Jiang2024} & 0.891 \\
+    Diabetes prediction dataset     & 0.8955 & Kaliappan et al.\ (2024)\cite{KaliappanGov2024} & 0.796 \\  
+    Iraqi society dataset   & 0.9825 & M. A. Sahid\ (2024)\cite{{Sahid2024}} & 0.962 \\  
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsubsection{Einschränkungen}
+
+\begin{itemize}
+  \item \textbf{Daten.} BRFSS 2023 Survey basiert unter anderem auf Selbstauskunft; Antwortverzerrungen können die Generalisierbarkeit einschränken.
+  \item \textbf{Modelle.} Gradient-Boosting-Verfahren sind empfindlich gegenüber Label-Noise; kleine Fehler können sich stark auswirken.
+  \item \textbf{Setup.} Es wurde \(\text{k}=3\)-fache Cross-Validation eingesetzt; die Varianz­schätzung der Metriken ist daher leicht optimistisch.
+\end{itemize}
+
+Zur Abhilfe empfehlen wir (1) größere \(\text{k}\)-Folds (\(\ge 10\)), (2) robuste Loss-Funktionen, (3) Cross-Datensatz-Validierung und
+(4) Kosten-sensitives Lernen.
+
+\subsubsection{Implikationen und Ausblick}
+
+Die Experimente zeigen, dass \textbf{Gradient-Boosting-Ansätze} in Kombination
+mit gezielter Daten­balancierung einen verlässlichen Benchmark für
+Gesundheits- und Sensordaten darstellen.
+
+\begin{itemize}
+  \item \emph{Klinische Entscheidungs­unterstützung:} Das BRFSS 2023 Survey-Modell kann als Frühwarnsystem in Public-Health-Dashboards dienen.
+  \item \emph{Edge-Deployments:} Die schlanken Modelle aus Diabetes prediction dataset und Iraqi society dataset (\(<10\)\,MB) eignen sich für Embedded-Geräte.
+  \item \emph{Forschung:} Die ermittelten Feature-Importanzen liefern Hypothesen für weiterführende Studien.
+\end{itemize}
+
+Zukünftige Arbeiten sollten domänenspezifische Präprozessoren (z.\,B.\ Signal-Denoising bei Wearables) integrieren und Transfer-Learning-Strategien prüfen, um Modelle zwischen Datensätzen portierbar zu machen. Insgesamt bestätigt sich, dass das Zusammenspiel aus Daten­balancierung, Baum-basierten Ensembles und Auto-Tuning eine robuste Grundlage für prädiktive Analysen bildet.
+
+\begin{flushright}
+  \footnotesize\textit{Florian Eber/Michael Strahl}
+\end{flushright}
+
+
+
+
+
+\section{Fazit}
+\label{sec:conclusion}
+
+Die Ergebnisse zeigen, dass Gradient-Boosting-Ensembles in Kombination mit gezieltem Resampling (insbesondere SMOTE + Tomek) auf allen drei untersuchten Datensätzen (BRFSS 2023, Diabetes Prediction Dataset, Iraqi Society Dataset) durchweg die höchsten F1-Macro-Werte liefern. Mit erreichten Scores von 0,730, 0,8955 und 0,9825 scheinen diese Ansätze die eingangs formulierte Forschungsfrage nach der robustesten Klassifikationsstrategie zu beantworten und deuten darauf hin, dass datengetriebene Balance-Methoden oft effektiver sind als komplexere Architekturen.
+
+Allerdings weist unsere Studie mehrere wichtige Limitationen auf, die bei der Interpretation der Ergebnisse berücksichtigt werden müssen: Der BRFSS-Datensatz basiert teilweise auf Selbstauskünften, was zu Verzerrungen führen kann. Die gewählte 3-fache Kreuzvalidierung könnte zu optimistischen Schätzungen neigen, und moderne Deep-Learning-Architekturen wie TabNet wurden nicht evaluiert. Besonders problematisch ist das Fehlen einer externen Validierung zwischen verschiedenen Populationen sowie die nicht systematische Untersuchung von Fairness-Aspekten, die für den praktischen Einsatz von entscheidender Bedeutung wären.
+
+Die Ergebnisse weisen zudem auf mehrere offene Herausforderungen hin: begrenzte Label-Qualität bei selbstberichteten Daten, mögliche Fairness-Biases sowie Fragen zur Übertragbarkeit auf andere ressourcenbeschränkte Umgebungen. Zukünftige Arbeiten könnten breiter gefächerte, multinationale Datensätze einbeziehen, fairness- und robustheitsbewusste Loss-Funktionen evaluieren und Transfer- bzw. Multi-Task-Learning-Ansätze prüfen, um Modelle ressourceneffizient zwischen verwandten Gesundheitsindikatoren zu teilen. Diese Forschungsrichtungen könnten dazu beitragen, das hier gezeigte Potenzial nachhaltiger in Praxis- und Forschungskontexte zu übertragen und die Generalisierung der Ansätze zu verbessern.
+
+\begin{flushright}
+  \footnotesize\textit{Florian Eber/Michael Strahl}
+\end{flushright}
+
+
+
+
+
+
+
+
+\section{Literaturverzeichnis }
+
+\addcontentsline{toc}{section}{Literaturverzeichnis}
+\begin{thebibliography}{}
+\small
+
+
+
+\bibitem{Phongying2023}
+M.~Phongying and S.~Hiriote.  
+\newblock Diabetes classification using machine learning techniques.  
+\newblock \emph{Computation}, 11(5):96, 2023.  
+\newblock \url{https://doi.org/10.3390/computation11050096}
+
+\bibitem{Khan2024}
+Q.~W.~Khan et al.  
+\newblock An intelligent diabetes classification and perception framework based on ensemble and deep learning method.  
+\newblock \emph{PeerJ Computer Science}, 10:e1914, 2024.  
+\newblock \url{https://doi.org/10.7717/peerj-cs.1914}
+
+\bibitem{Chou2023}
+C.-Y.~Chou, D.-Y.~Hsu, and C.-H.~Chou.  
+\newblock Predicting the onset of diabetes with machine learning methods.  
+\newblock \emph{Journal of Personalized Medicine}, 13(3):406, 2023.  
+\newblock \url{https://doi.org/10.3390/jpm13030406}
+
+\bibitem{Kaliappan2024}
+J.~Kaliappan et al.  
+\newblock Analyzing classification and feature selection strategies for diabetes prediction across diverse diabetes datasets.  
+\newblock \emph{Frontiers in Artificial Intelligence}, 7:1421751, 2024.  
+\newblock \url{https://doi.org/10.3389/frai.2024.1421751}
+
+\bibitem{Abousaber2025}
+I.~Abousaber et al.
+\newblock Robust predictive framework for diabetes classification using optimized machine learning on imbalanced datasets.
+\newblock \emph{Frontiers in Artificial Intelligence}, 8, 2025.
+\newblock \url{https://www.frontiersin.org/journals/artificial-intelligence/articles/10.3389/frai.2024.1499530/full}
+
+\bibitem{Kiran2025}
+M.~Kiran et al.
+\newblock Machine learning and artificial intelligence in type 2 diabetes prediction: A comprehensive 33-year bibliometric and literature analysis.
+\newblock \emph{Frontiers in Digital Health}, 7:1557467, 2025.
+\newblock \url{https://doi.org/10.3389/fdgth.2025.1557467}
+
+
+\bibitem{mustafa2023}
+M.~Mustafa.  
+\newblock Diabetes Prediction Dataset.  
+\newblock \emph{Diabetes prediction dataset}, 2023.  
+\newblock \url{https://www.kaggle.com/datasets/iammustafatz/diabetes-prediction-dataset}
+
+\bibitem{rashid2020}
+A.~Rashid.  
+\newblock Diabetes Dataset (Version 1).  
+\newblock \emph{Iraqi society dataset}, 2020.  
+\newblock \url{https://doi.org/10.17632/wj9rwkp9c2.1}
+
+\bibitem{cdc2021}
+CDC (Centers for Disease Control and Prevention).  
+\newblock Diabetes Health Indicators Dataset.  
+\newblock \emph{UCI Machine Learning Repository}, 2017.  
+\newblock \url{https://doi.org/10.24432/C53919}
+
+\bibitem{BRFSS2023}
+Centers for Disease Control and Prevention.
+\newblock \emph{2023 BRFSS Survey Data and Documentation}.
+\newblock 2025. \url{https://www.cdc.gov/brfss/annual_data/annual_2023.html}
+
+
+\bibitem{Chawla2002}
+N.~V. Chawla, K.~W. Bowyer, L.~O. Hall, and W.~P. Kegelmeyer.
+\newblock SMOTE: Synthetic minority over-sampling technique.
+\newblock \emph{Journal of Artificial Intelligence Research}, 16:321--357, 2002.
+\newblock \url{https://doi.org/10.1613/jair.953}
+
+\bibitem{sklearn_f1_score}
+  {{scikit-learn developers}}.
+  \newblock \emph{sklearn.metrics.f1\_score}.
+  \newblock scikit-learn documentation.
+  \newblock \url{https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html}.
+  \newblock (Accessed on 2025-07-03).
+
+\bibitem{sklearn_stratified_kfold}
+  {{scikit-learn developers}}.
+  \newblock \emph{Cross-validation iterators: StratifiedKFold}.
+  \newblock scikit-learn documentation.
+  \newblock \url{https://scikit-learn.org/stable/modules/cross_validation.html#stratified-k-fold}.
+  \newblock (Accessed on 2025-07-03).
+
+\bibitem{sklearn_user_guide_ch7_3_1}
+  {{scikit-learn developers}}.
+  \newblock \emph{scikit-learn User Guide}.
+  \newblock \url{https://scikit-learn.org/stable/user_guide.html}.
+  \newblock (Accessed on 2025-07-03).
+  \newblock Siehe insbesondere Kapitel 7, Unterabschnitt 3.1.
+
+\bibitem{Ashisha2024}
+P.~Ashisha, R.~Rao und H.~Chowdhury.
+\newblock Interactive Diabetes Risk Prediction Using Explainable Machine
+          Learning.
+\newblock \emph{Journal of Biomedical Informatics}, 147:104476, 2024.
+\newblock Verfügbar unter:
+\url{https://doi.org/10.1007/s44196-024-00678-3}
+
+\bibitem{Jiang2024}
+L.~Jiang et al.  
+\newblock A feature optimization study based on a diabetes risk questionnaire.  
+\newblock \emph{Frontiers in Public Health}, 12:1328353, 2024.  
+\newblock \url{https://doi.org/10.3389/fpubh.2024.1328353}
+
+\bibitem{KaliappanGov2024}
+J.~Kaliappan, B.~Subramanian und S.~Prasad.
+\newblock Analyzing Classification and Feature Selection Strategies for Diabetes
+          Prediction across Diverse Datasets.
+\newblock \emph{Frontiers in Artificial Intelligence}, 7:124, 2024.
+\newblock Verfügbar unter:
+\url{https://pmc.ncbi.nlm.nih.gov/articles/PMC11371799/}
+
+\bibitem{Sahid2024}
+M.~A. Sahid, M.~U.~H. Babar und M.~P. Uddin.
+\newblock Predictive Modeling of Multi-Class Diabetes Mellitus Using Machine
+          Learning and Filtering Iraqi Diabetes Data Dynamics.
+\newblock \emph{PLOS ONE}, 19(5):e0300785, 2024.
+\newblock Verfügbar unter:
+\url{https://doi.org/10.1371/journal.pone.0300785}
+
+\bibitem{Tomek1976}
+Tomek, I. (1976). Two Modifications of CNN. \textit{IEEE Transactions on Systems, Man, and Cybernetics}, \textit{SMC-6}(11), 769--772.
+
+\bibitem{He2008}
+He, H., Bai, Y., Garcia, E. A., \& Li, S. (2008). ADASYN: Adaptive Synthetic Sampling Approach for Imbalanced Learning. \textit{Proceedings of the IEEE International Joint Conference on Neural Networks (IJCNN)}, 1322--1328.
+
+\bibitem{Han2005}
+Han, H., Wang, W., \& Mao, B. (2005). Borderline-SMOTE: A New Over-Sampling Method in Imbalanced Data Sets Learning. \textit{Proceedings of the International Conference on Intelligent Computing (ICIC)}, 878--887.
+
+
+
+\end{thebibliography}
+
+
+
+\newpage
+\appendix
+\section{Anhang}
+
+\subsection{Hyperparameter-Suchräume}
+\begin{table}[htbp]
+    \centering
+    \caption{Hyperparameter-Suchräume (\texttt{RandomizedSearchCV}) für die Klassifikatoren}
+    \label{tab:hyperparameters}
+    \begin{tabular}{|l|l|l|}
+        \hline
+        \textbf{Klassifikator} & \textbf{Parameter} & \textbf{Suchraum} \\
+        \hline
+        \multirow{2}{*}{LogisticRegression}
+            & C & \texttt{loguniform(1e-2, 1e2)} \\
+            & solver & \texttt{\{liblinear, lbfgs\}} \\
+        \hline
+        \multirow{2}{*}{KNeighborsClassifier}
+            & n\_neighbors & \texttt{randint(3, 11)} \\
+            & weights & \texttt{\{uniform, distance\}} \\
+        \hline
+        GaussianNB
+            & var\_smoothing & \texttt{loguniform(1e-10, 1e-6)} \\
+        \hline
+        \multirow{3}{*}{SVC}
+            & C & \texttt{loguniform(1e-1, 1e1)} \\
+            & kernel & \texttt{\{linear, rbf\}} \\
+            & gamma & \texttt{\{'scale'\}} \\ % Fixed value, not a distribution
+        \hline
+        \multirow{3}{*}{MLPClassifier}
+            & hidden\_layer\_sizes & \texttt{\{(50,), (100,)\}} \\
+            & alpha & \texttt{loguniform(1e-4, 1e-2)} \\
+            & learning\_rate\_init & \texttt{\{0.001, 0.01\}} \\ % Fixed values, not a distribution
+        \hline
+        \multirow{3}{*}{RandomForestClassifier}
+            & n\_estimators & \texttt{\{50, 100, 200\}} \\ % Fixed values, not a distribution
+            & max\_depth & \texttt{\{5, 10, 15\}} \\ % Fixed values, not a distribution
+            & min\_samples\_split & \texttt{\{2, 5\}} \\ % Fixed values, not a distribution
+        \hline
+        \multirow{3}{*}{GradientBoostingClassifier}
+            & n\_estimators & \texttt{\{50, 100\}} \\
+            & learning\_rate & \texttt{\{0.01, 0.1, 0.2\}} \\
+            & max\_depth & \texttt{\{3, 5, 7\}} \\
+        \hline
+        \multirow{4}{*}{XGBClassifier} % Added XGBClassifier
+            & n\_estimators & \texttt{\{50, 100\}} \\ % Matches ultra_fast_gb_params
+            & learning\_rate & \texttt{\{0.1, 0.2\}} \\ % Matches ultra_fast_gb_params
+            & max\_depth & \texttt{\{3, 5\}} \\ % Matches ultra_fast_gb_params
+            & subsample & \texttt{\{0.8, 1.0\}} \\ % Matches ultra_fast_gb_params
+        \hline
+    \end{tabular}
+\end{table}
+
+
+\clearpage
+\subsection{Feature-Korrelationsmatrizen der drei Datensätze}
+% Feature-Korrelationsmatrizen - Eigene Seite, untereinander
+\begin{figure}[hbt!]
+\centering
+\includegraphics[width=0.6\textwidth]{brfss_correlation_matrix.png}
+\caption{(a) BRFSS 2023 Survey mit komplexer Merkmalsstruktur aus 45 Features}
+\label{fig:brfss_correlation_matrix}
+\end{figure}
+
+\begin{figure}[hbt!]
+\centering
+\includegraphics[width=0.6\textwidth]{kaggle_correlation_matrix.png}
+\caption{(b) Diabetes Prediction Dataset mit 8 grundlegenden medizinischen Indikatoren}
+\label{fig:kaggle_correlation_matrix}
+\end{figure}
+
+\begin{figure}[hbt!]
+\centering
+\includegraphics[width=0.6\textwidth]{mendeley_correlation_matrix.png}
+\caption{(c) Iraqi Society Dataset mit 13 laborwert-spezifischen Korrelationen.}
+\label{fig:mendeley_correlation_matrix}
+\end{figure}
+
+
+\clearpage
+\subsection{Klassenverteilungen der drei Datensätze}
+% Klassenverteilungen - Eigene Seite, untereinander
+\begin{figure}[hbt!]
+\centering
+\includegraphics[width=0.6\textwidth]{brfss_class_distribution.png}
+\caption{(a) BRFSS 2023 Survey mit extremer Ungleichverteilung (94,4\%/0,5\%/5,1\%)}
+\label{fig:brfss_class_distribution}
+\end{figure}
+
+\begin{figure}[hbt!]
+\centering
+\includegraphics[width=0.6\textwidth]{kaggle_class_distribution.png}
+\caption{(b) Diabetes Prediction Dataset mit binärer Verteilung (91,5\%/8,5\%)}
+\label{fig:kaggle_class_distribution}
+\end{figure}
+
+\begin{figure}[hbt!]
+\centering
+\includegraphics[width=0.6\textwidth]{mendeley_class_distribution.png}
+\caption{(c) Iraqi Society Dataset mit dreiklassiger Verteilung (84,4\%/10,3\%/5,3\%)}
+\label{fig:mendeley_class_distribution}
+\end{figure}
+
+
+\clearpage
+\subsection{Finale Modellvergleiche nach Optimierungen}
+% Advanced Comparisons - Eigene Seite, untereinander
+\begin{figure}[hbt!]
+\centering
+\includegraphics[width=0.9\textwidth]{brfss_advanced_comparison.png}
+\caption{(a) BRFSS 2023 Survey erreicht 0.730 F1-Macro (+2.2\%)}
+\label{fig:brfss_advanced_comparison}
+\end{figure}
+
+\begin{figure}[hbt!]
+\centering
+\includegraphics[width=0.9\textwidth]{kaggle_advanced_comparison.png}
+\caption{(b) Diabetes Prediction Dataset erreicht 0.896 F1-Macro (+24.6\%)}
+\label{fig:kaggle_advanced_comparison}
+\end{figure}
+
+\begin{figure}[hbt!]
+\centering
+\includegraphics[width=0.9\textwidth]{mendeley_advanced_comparison.png}
+\caption{(c) Iraqi Society Dataset erreicht 0.983 F1-Macro (+33.2\%)}
+\label{fig:mendeley_advanced_comparison}
+\end{figure}
+
+
+\clearpage
+\subsection{Top-3 Modelle und detaillierte Metriken der besten Performer}
+% Top-3 Models - Eigene Seite, untereinander
+\begin{figure}[hbt!]
+\centering
+\includegraphics[width=0.9\textwidth]{brfss_top3_models.png}
+\caption{(a) BRFSS 2023 Survey: SMOTE+Tomek mit 0.730 F1-Macro}
+\label{fig:brfss_top3_models}
+\end{figure}
+
+\begin{figure}[hbt!]
+\centering
+\includegraphics[width=0.9\textwidth]{kaggle_top3_models.png}
+\caption{(b) Diabetes Prediction Dataset: Gradient Boosting mit 0.896 F1-Macro}
+\label{fig:kaggle_top3_models}
+\end{figure}
+
+\begin{figure}[hbt!]
+\centering
+\includegraphics[width=0.9\textwidth]{mendeley_top3_models.png}
+\caption{(c) Iraqi Society Dataset: XGBoost mit 0.983 F1-Macro}
+\label{fig:mendeley_top3_models}
+\end{figure}
+
+
+\clearpage
+\subsection{Umfassende Modellanalyse}
+% BRFSS Comprehensive Dashboard - Ganze Seite Querformat
+\begin{figure}[hbt!]
+\centering
+\rotatebox{90}{%
+\begin{minipage}{\textheight}
+\centering
+\includegraphics[width=\textwidth]{brfss_comprehensive_dashboard.png}
+\caption{Umfassende Modellanalyse für BRFSS 2023 Survey: 6-Panel Dashboard mit F1-Macro Ranking, Performance-Scatter-Plot, Top-3 Detailvergleich, Metriken-Heatmap, Confusion Matrix und Verbesserung gegenüber Baseline.}
+\label{fig:brfss_comprehensive}
+\end{minipage}%
+}
+\end{figure}
+
+% Kaggle Comprehensive Dashboard - Ganze Seite Querformat
+\begin{figure}[hbt!]
+\centering
+\rotatebox{90}{%
+\begin{minipage}{\textheight}
+\centering
+\includegraphics[width=\textwidth]{kaggle_comprehensive_dashboard.png}
+\caption{Umfassende Modellanalyse für Diabetes Prediction Dataset: 6-Panel Dashboard mit allen wichtigen Leistungsmetriken und Vergleichen.}
+\label{fig:kaggle_comprehensive}
+\end{minipage}%
+}
+\end{figure}
+
+% Mendeley Comprehensive Dashboard - Ganze Seite Querformat
+\begin{figure}[hbt!]
+\centering
+\rotatebox{90}{%
+\begin{minipage}{\textheight}
+\centering
+\includegraphics[width=\textwidth]{mendeley_comprehensive_dashboard.png}
+\caption{Umfassende Modellanalyse für Iraqi Society Dataset: 6-Panel Dashboard zeigt die exzellente Performance mit F1-Macro-Scores über 0.98.}
+\label{fig:mendeley_comprehensive}
+\end{minipage}%
+}
+\end{figure}
+
+
+\end{document}
