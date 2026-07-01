@@ -21,7 +21,7 @@
 	Quirin Lex (xxx)\\
 	Xuan Truong Nguyen (xxx)\\
 	Johannes Ramser (xxx)\\
-	Carlos García (xxx)
+	Florian Koo (xxx)
 }
 \date{}
 \maketitle
@@ -60,15 +60,54 @@ mit geschachtelter Kreuzvalidierung evaluiert, wobei F1-Score und ROC-AUC als Ha
 \begin{flushright}\textit{Autor: Xuan Truong Nguyen}\end{flushright}
 
 \section{Verwandte Arbeiten}
+Die datengetriebene Vorhersage von Kundenentscheidungen, etwa ob ein Kunde kündigt, ein Produkt
+abschließt oder einen Kauf tätigt, ist ein etabliertes Anwendungsfeld des maschinellen Lernens.
+Für jeden der drei hier verwendeten Datensätze hat sich eine eigene Forschungslinie herausgebildet,
+die wir im Folgenden zusammen mit der methodischen Grundlage einordnen.
 
-\textbf{Gliederung (ca. 1 Seite):}
-\begin{itemize}
-	\item Literatur zu Churn-Prediction in Telekommunikation (klassische Verfahren: Logistic Regression, Decision Trees, Ensembles) — Einordnung des Telco-Datensatzes.
-	\item Literatur zu Bank-Marketing/Term-Deposit-Vorhersage (UCI Bank-Marketing-Datensatz ist Standard-Benchmark) — welche Modelle/Resultate dort berichtet werden, insbesondere Rolle von \emph{duration} und makroökonomischen Indikatoren.
-	\item Literatur zu Kaufabsicht/Online-Shopper-Intention-Vorhersage (Session-/Clickstream-basierte Merkmale, PageValues als bekannt starker Prädiktor).
-	\item Allgemeine Methodik-Literatur: Umgang mit Klassenungleichgewicht (class\_weight, Resampling), Wahl von F1/ROC-AUC statt Accuracy, nested Cross-Validation zur unverzerrten Modellbewertung, SHAP/Permutation Importance als Standardverfahren der Modellinterpretation.
-	\item Abgrenzung zur eigenen Arbeit: Vergleich über mehrere Domänen mit identischer Pipeline statt domänenspezifischer Einzelstudien; kritische Diskussion von Kollinearität (z.\,B. emp.var.rate vs. euribor3m, r=0.97) bei Feature-Importance-Methoden.
-\end{itemize}
+\subsection{Stand der Forschung}
+Die Vorhersage von Kundenabwanderung in der Telekommunikation zählt zu den am längsten
+untersuchten Anwendungen. Frühe Arbeiten setzten primär auf klassische Verfahren wie Logistic
+Regression und Entscheidungsbäume, während sich zunehmend baumbasierte Ensembles als überlegen
+erwiesen haben. Ahmad et al.\ \cite{Ahmad2019} zeigten dies auf einer Big-Data-Plattform, wo
+Ensemble-Methoden die höchste Vorhersagegüte erreichten. Neuere Studien ergänzen den Fokus um
+Klassenungleichgewicht und Interpretierbarkeit: El~Attar und El-Hajj \cite{ElAttar2026}
+verglichen auf demselben Telco-Datensatz sieben Klassifikatoren mit SMOTE-Oversampling,
+erzielten mit Gradient Boosting einen ROC-AUC von 0{,}932 und identifizierten per SHAP
+Vertragstyp, Laufzeit und technischen Support als stärkste Prädiktoren.
+
+Der Bank-Marketing-Datensatz hat sich als Standard-Benchmark für die Vorhersage von
+Festgeldabschlüssen etabliert. Moro et al.\ \cite{Moro2014} stellten ihn vor und wiesen die
+Gesprächsdauer sowie makroökonomische Indikatoren als dominierende Merkmale aus; zugleich
+betonten sie, dass die Gesprächsdauer erst nach dem Kundenkontakt bekannt ist und für ein
+realistisch einsetzbares Modell auszuschließen wäre. Setiyani et al.\ \cite{Setiyani2022}
+bestätigten auf demselben Datensatz die Überlegenheit von Ensemble-Verfahren, wobei XGBoost mit
+rund 92\,\% die höchste Accuracy erreichte. Für die Kaufabsicht im Online-Handel stammt der von
+uns genutzte Datensatz von Sakar et al.\ \cite{Sakar2019}, die Random Forest, SVM und ein MLP
+auf Session- und Clickstream-Merkmalen verglichen; das MLP schnitt am besten ab, und das aus
+E-Commerce-Metriken abgeleitete Merkmal \texttt{PageValues} erwies sich als stärkster Prädiktor.
+
+Aus methodischer Sicht prägen zwei Aspekte die Evaluation solcher Modelle. Zum einen erfordert
+das durchgängige Klassenungleichgewicht einen bewussten Umgang mit Resampling-Verfahren und
+Klassengewichtung sowie die Wahl geeigneter Metriken: Rawat und Mishra \cite{RawatMishra2022}
+geben hierzu einen Überblick und begründen, warum F1-Score und ROC-AUC der Accuracy vorzuziehen
+sind. Zum anderen dient die geschachtelte Kreuzvalidierung einer unverzerrten Modellbewertung,
+während sich zur Interpretation Permutation Importance \cite{Breiman2001} und SHAP-Werte
+\cite{Lundberg2017} als Standardverfahren durchgesetzt haben. Beide unterliegen allerdings der
+bekannten Einschränkung, dass sie bei stark korrelierten Merkmalen keine kausal trennbaren
+Beiträge liefern.
+
+\subsection{Abgrenzung und Beitrag}
+Die bisherigen Arbeiten untersuchen jeweils nur einen Datensatz aus einem einzelnen
+Anwendungsbereich, während große Vergleichsstudien \cite{FernandezDelgado2014} viele Verfahren,
+aber nicht speziell Kundenentscheidungen betrachten. Unsere Arbeit verbindet beides: Wir vergleichen
+sieben Verfahren mit exakt demselben Ablauf über alle drei Anwendungsbereiche und achten neben der
+Vorhersagegüte darauf, wie nachvollziehbar und übertragbar die Modelle sind und wie sie mit dem
+Klassenungleichgewicht umgehen. Ein besonderes Augenmerk gilt dabei dem Problem, dass sich die
+Bedeutung einzelner Merkmale kaum bestimmen lässt, wenn zwei Merkmale stark zusammenhängen, wie im
+Bank-Marketing-Datensatz zwei wirtschaftliche Kennzahlen mit einer Korrelation von $r=0{,}97$.
+
+\begin{flushright}\textit{Autor: Florian Koo}\end{flushright}
 
 \section{Methoden}
 \subsection{Datenvorverarbeitung}
@@ -84,7 +123,7 @@ Die Transformation für das Modelltraining erfolgt ausschließlich innerhalb der
 
 Als Baseline-Verfahren werden drei klassische Klassifikatoren eingesetzt, die ohne aufwändige Hyperparameter-Optimierung eine erste Einordnung der Schwierigkeitsgrade der Datensätze ermöglichen und als Vergleichsmaßstab für die fortgeschrittenen Modelle dienen.
 
-\textbf{Logistic Regression} modelliert die Wahrscheinlichkeit der positiven Klasse als logistische Funktion einer Linearkombination der Eingabemerkmale. Es dient als einfache, gut interpretierbare lineare Referenz, an der sich die fortgeschritteneren, nichtlinearen Modelle messen lassen müssen. Da es als Baseline ohne Anspruch auf Optimalität dient, wird auf eine Hyperparameter-Suche verzichtet und mit den Standardeinstellungen trainiert.
+\textbf{Logistic Regression} modelliert die Wahrscheinlichkeit der positiven Klasse als logistische Funktion einer Linearkombination der Eingabemerkmale. Es dient als einfache, gut interpretierbare lineare Referenz, an der sich die fortgeschritteneren, nichtlinearen Modelle messen lassen müssen. Der Regularisierungsparameter $C$ wurde per Grid-Search über Kreuzvalidierung optimiert, wobei sich datensatzspezifisch $C=10$ für Telco und Online Shoppers Intention sowie $C=1$ für Bank Marketing als beste Werte ergaben.
 
 \textbf{Naive Bayes} wendet den Satz von Bayes unter der vereinfachenden Annahme an, dass alle Merkmale bedingt unabhängig von der Klasse sind. Im Gegensatz zur Logistic Regression trifft es eine starke probabilistische Modellannahme, die auf korrelierten Daten systematisch verletzt ist, was die Vorhersageleistung auf dem Bank-Marketing-Datensatz mit seinen kollinearen makroökonomischen Indikatoren direkt sichtbar macht. Auch hier wird ohne Hyperparameter-Suche mit Standardeinstellungen (Gaussian Naive Bayes) trainiert.
 
@@ -164,36 +203,38 @@ Die Experimente werden in Python unter Verwendung von scikit-learn \cite{Pedrego
 
 \subsection{Ergebnisse und Diskussion}
 
-Tabelle~\ref{tab:overall} fasst die ROC-AUC-Werte aller sieben Klassifikatoren zusammen. Auf allen drei Datensätzen übertreffen die fortgeschrittenen Modelle die Baselines deutlich, wobei die Rangfolge innerhalb beider Gruppen je nach Datensatz leicht variiert. Die Unterschiede zwischen den Datensätzen selbst sind erheblich: Während auf Bank Marketing Werte über 0,93 erreichbar sind, liegt das gesamte Leistungsspektrum auf Telco zwischen 0,78 und 0,85, was die höhere Schwierigkeit dieses Datensatzes widerspiegelt.
+Tabelle~\ref{tab:overall} fasst die ROC-AUC-Werte aller sieben Klassifikatoren zusammen. Auf allen drei Datensätzen übertreffen die fortgeschrittenen Modelle die Baselines deutlich, wobei die Rangfolge innerhalb beider Gruppen je nach Datensatz leicht variiert. Die Unterschiede zwischen den Datensätzen selbst sind erheblich: Während auf Bank Marketing Werte über 0,93 erreichbar sind, liegt das gesamte Leistungsspektrum auf Telco zwischen 0,76 und 0,85, was die höhere Schwierigkeit dieses Datensatzes widerspiegelt.
 
 Unter den Baseline-Verfahren zeigt k-Nearest Neighbors die größte Variabilität zwischen den Datensätzen (ROC-AUC 0{,}760--0{,}890; detaillierte Metriken in Tab.~\ref{tab:knn-results}), was auf die Sensitivität des distanzbasierten Verfahrens gegenüber der dimensionalen Merkmalsstruktur zurückzuführen ist.
 
-% [Logistic Regression und Naive Bayes: Auswertung durch Teammitglieder]
+% [Logistic Regression: Auswertung durch Teammitglieder]
+
+Naive Bayes fällt unter den Baseline-Verfahren vor allem auf Bank Marketing deutlich ab (ROC-AUC 0{,}762; detaillierte Metriken in Tab.~\ref{tab:nb-results}), da die stark kollinearen makroökonomischen Indikatoren die Annahme bedingter Unabhängigkeit verletzen. Auf Telco erkauft es sich dagegen den höchsten Recall aller Baseline-Verfahren (0{,}78) auf Kosten einer niedrigen Precision (0{,}47), während es auf Ecom mit einer ROC-AUC von 0{,}877 seine beste Leistung erzielt.
 
 % [SVM: Auswertung durch Teammitglieder]
 
-Das Multi-Layer Perceptron konkurriert auf Bank Marketing mit den Ensemble-Methoden (ROC-AUC 0{,}941 vs.\ 0{,}943--0{,}945; detaillierte Metriken in Tab.~\ref{tab:mlp-results}) und übertrifft den Random Forest auf Telco leicht (0{,}844 vs.\ 0{,}838), bleibt auf Ecom jedoch knapp zurück (0{,}916 vs.\ 0{,}924). Die variable Architekturwahl der Kreuzvalidierung spiegelt die unterschiedlichen Datensatzgrößen und Feature-Interaktionen wider.
+Das Multi-Layer Perceptron konkurriert auf Bank Marketing mit den Ensemble-Methoden (ROC-AUC 0{,}941 vs.\ 0{,}943--0{,}948; detaillierte Metriken in Tab.~\ref{tab:mlp-results}) und übertrifft den Random Forest auf Telco leicht (0{,}844 vs.\ 0{,}838), bleibt auf Ecom jedoch knapp zurück (0{,}916 vs.\ 0{,}924). Die variable Architekturwahl der Kreuzvalidierung spiegelt die unterschiedlichen Datensatzgrößen und Feature-Interaktionen wider.
 
 % [Gradient Boosting: Auswertung durch Teammitglieder]
 
-Random Forest erzielt auf Bank Marketing die höchste ROC-AUC aller sieben Klassifikatoren (0,943) und zeigt über alle drei Datensätze eine konsistent starke Leistung (detaillierte Metriken in Tab.~\ref{tab:rf-results}). Als bestes Modell des Vergleichs wird es im folgenden Abschnitt vertieft analysiert.
+Random Forest erzielt auf Bank Marketing die höchste Test-ROC-AUC aller sieben Klassifikatoren (0,943) und zeigt über alle drei Datensätze eine konsistent starke Leistung (detaillierte Metriken in Tab.~\ref{tab:rf-results}). Als bestes Modell des Vergleichs wird es im folgenden Abschnitt vertieft analysiert.
 
 \begin{table}[ht]
 \centering
 \small
-\caption{Modellvergleich (Test-ROC-AUC) über alle drei Datensätze. LogReg und Naive Bayes aus 5-fold CV; k-NN, SVM, MLP, RF und GB aus nested CV und Hold-out-Test. Bank-Spalte: MLP/RF aus Random-, GB aus Temporal-Split.}
+\caption{Modellvergleich (ROC-AUC) über alle drei Datensätze. LogReg, Naive Bayes und GB: CV-Wert; k-NN, SVM, MLP und RF: Test-Wert. Bank-Spalte: MLP/RF aus Random-, GB aus Temporal-Split.}
 \label{tab:overall}
 \begin{tabular}{lccc}
 \toprule
 Modell & Telco & Bank & E-Commerce \\
 \midrule
-Logistic Regression & 0.846 & 0.928 & 0.890 \\
+Logistic Regression & 0.841 & 0.936 & 0.893 \\
 k-NN (tuned $k$)    & 0.760 & 0.770 & 0.890 \\
-Naive Bayes         & 0.821 & 0.819 & 0.812 \\
+Naive Bayes         & 0.810 & 0.762 & 0.877 \\
 SVM (RBF)           & 0.796 & 0.932 & 0.859 \\
 MLP                 & 0.844 & 0.941 & 0.916 \\
 Random Forest       & 0.838 & 0.943 & 0.924 \\
-Gradient Boosting   & 0.848 & 0.945 & 0.932 \\
+Gradient Boosting   & 0.848 & 0.948 & 0.932 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -205,17 +246,17 @@ Das beste Modell (Random Forest auf Bank Marketing, ROC-AUC 0{,}943) wird vertie
 
 \paragraph{Modellleistung und Permutation Importance}
 
-Das finale Modell erreicht auf dem Testdatensatz eine ROC-AUC von 0{,}912 und einen F1-Score von 0{,}576 (Precision 0{,}664, Recall 0{,}508, Specificity 0{,}949). Die hohe Specificity bei moderatem Recall zeigt ein konservatives Entscheidungsverhalten, das positive Vorhersagen nur bei hoher Sicherheit trifft --- erwartbar bei einem Minoritätsanteil von 11,3\,\%.
+Das finale Modell erreicht auf dem Testdatensatz eine ROC-AUC von 0{,}913 und einen F1-Score von 0{,}517 (Precision 0{,}718, Recall 0{,}404, Specificity 0{,}968). Die hohe Specificity bei niedrigem Recall zeigt ein konservatives Entscheidungsverhalten, das positive Vorhersagen nur bei hoher Sicherheit trifft --- erwartbar bei einem Minoritätsanteil von 11,3\,\%.
 
-Die Permutation Importance identifiziert die Gesprächsdauer als dominierendes Merkmal (mittlere F1-Verschlechterung 0{,}232); es folgen makroökonomische Indikatoren und der vorherige Kampagnenausgang. Die Gesprächsdauer ist jedoch post-hoc verfügbar und steht für eine prospektive Vorhersage vor einem Kundenkontakt nicht zur Verfügung.
+Die Permutation Importance identifiziert die Gesprächsdauer als dominierendes Merkmal (mittlere F1-Verschlechterung 0{,}205); es folgen makroökonomische Indikatoren und der vorherige Kampagnenausgang. Die Gesprächsdauer ist jedoch post-hoc verfügbar und steht für eine prospektive Vorhersage vor einem Kundenkontakt nicht zur Verfügung.
 
 \paragraph{SHAP-Analyse und Lernverhalten}
 
-Die SHAP-Analyse bestätigt die Dominanz der Gesprächsdauer und zeigt die Einflussrichtung: Längere Gespräche verschieben die Vorhersage in Richtung Abschluss, höhere Beschäftigungszahlen und steigende Zinssätze wirken tendenziell negativ. Die starke Korrelation makroökonomischer Merkmale ($r=0{,}97$) führt zu einer künstlichen Aufteilung der SHAP-Beiträge, sodass individuelle Effekte kausal nicht trennbar sind --- die Ergebnisse beschreiben das gelernte Entscheidungsverhalten, nicht die Wirkungsstruktur. Die Lernkurve offenbart eine deutliche Overfitting-Lücke zwischen Trainings- und Validierungsleistung, die trotz guter Testgeneralisierung auf überschüssige Modellkapazität hinweist. Die Hyperparameter-Sensitivitätsanalyse zeigt Plateaueffekte ab etwa 200~Bäumen und einer Baumtiefe über 10; eine stärkere Regularisierung könnte die Lücke verringern, ohne die Vorhersagegüte wesentlich zu beeinträchtigen.
+Die SHAP-Analyse bestätigt die Dominanz der Gesprächsdauer und zeigt die Einflussrichtung: Längere Gespräche verschieben die Vorhersage in Richtung Abschluss, höhere Beschäftigungszahlen und steigende Zinssätze wirken tendenziell negativ. Die starke Korrelation makroökonomischer Merkmale ($r=0{,}97$) führt zu einer künstlichen Aufteilung der SHAP-Beiträge, sodass individuelle Effekte kausal nicht trennbar sind --- die Ergebnisse beschreiben das gelernte Entscheidungsverhalten, nicht die Wirkungsstruktur. Die Lernkurve offenbart eine deutliche Overfitting-Lücke zwischen Trainings- und Validierungsleistung, die trotz guter Testgeneralisierung auf überschüssige Modellkapazität hinweist. Die Hyperparameter-Sensitivitätsanalyse zeigt Plateaueffekte ab etwa 200~Bäumen und einer Baumtiefe über 15; eine stärkere Regularisierung könnte die Lücke verringern, ohne die Vorhersagegüte wesentlich zu beeinträchtigen.
 
 \paragraph{Fehleranalyse}
 
-Die Konfusionsmatrix bestätigt das konservative Verhalten: Rund 51\,\% der tatsächlichen Abschlüsse werden erkannt, während nur 5\,\% der Negativfälle falsch-positiv klassifiziert werden. Die Misclassification-Analyse zeigt, dass Fehler systematisch an der Entscheidungsgrenze auftreten --- bei Instanzen, deren Merkmalswerte im Übergangsbereich zwischen typischen Positiv- und Negativbeispielen liegen. Die verbleibende Unsicherheit ist strukturell durch die Begrenztheit der Merkmale bedingt, nicht durch zufälliges Rauschen.
+Die Konfusionsmatrix bestätigt das konservative Verhalten: Rund 40\,\% der tatsächlichen Abschlüsse werden erkannt, während nur rund 3\,\% der Negativfälle falsch-positiv klassifiziert werden. Die Misclassification-Analyse zeigt, dass Fehler systematisch an der Entscheidungsgrenze auftreten --- bei Instanzen, deren Merkmalswerte im Übergangsbereich zwischen typischen Positiv- und Negativbeispielen liegen. Die verbleibende Unsicherheit ist strukturell durch die Begrenztheit der Merkmale bedingt, nicht durch zufälliges Rauschen.
 
 \begin{flushright}\textit{Autor: Johannes Ramser}\end{flushright}
 
@@ -248,7 +289,7 @@ Schließlich unterstreicht die Merkmal \texttt{duration} als stärkster Prädikt
 	\item Offene Fragen/Ausblick: Modellanalyse auf Telco/Ecom ausweiten, Threshold-/Cost-Sensitive-Tuning für Geschäftsszenarien, Untersuchung weiterer Hyperparameter, Robustheit gegenüber Concept Drift (Bank-Datensatz) genauer untersuchen.
 \end{itemize}
 
-\section{Literaturverzeichnis — Hinweis}
+\section{Literaturverzeichnis: Hinweis}
 
 Alle in der Arbeit zitierten Quellen sind im Literaturverzeichnis aufzuführen.
 
@@ -287,6 +328,21 @@ M.~Fern\'{a}ndez-Delgado, E.~Cernadas, S.~Barro, and D.~Amorim.
 A.~K.~Ahmad, A.~Jafar, and K.~Aljoumaa.
 \newblock Customer churn prediction in telecom using machine learning in big data platform.
 \newblock \emph{Journal of Big Data}, 6(1):28, 2019.
+
+\bibitem{ElAttar2026}
+A.~El~Attar and M.~El-Hajj.
+\newblock Explainable AI-driven customer churn prediction: A multi-model ensemble approach with SHAP-based feature analysis.
+\newblock \emph{Frontiers in Artificial Intelligence}, 9:1748799, 2026.
+
+\bibitem{Setiyani2022}
+L.~Setiyani, A.~Indahsari, Rosalina, and T.~Wansen.
+\newblock Finding the best techniques for predicting term deposit subscriptions (case study UCI machine learning dataset).
+\newblock In \emph{IEEE International Conference on Sustainable Engineering and Creative Computing (ICSECC)}, pages 100--104, 2022.
+
+\bibitem{RawatMishra2022}
+S.~S.~Rawat and A.~K.~Mishra.
+\newblock Review of methods for handling class-imbalanced in classification problems.
+\newblock \emph{arXiv preprint arXiv:2211.05456}, 2022.
 
 \bibitem{Sakar2019}
 C.~O.~Sakar, S.~O.~Polat, M.~Katircioglu, and Y.~Kastro.
@@ -328,7 +384,7 @@ F.~Pedregosa et al.
 \begin{table}[H]
     \centering
     \footnotesize
-    \caption{Hyperparameter-Suchräume (\texttt{GridSearchCV}) für die Klassifikatoren. Logistic Regression und Naive Bayes werden ohne Grid für die finale Modellauswahl verwendet (siehe Abschnitt~3.2); die Naive-Bayes-Implementierung (\texttt{BernoulliNB}) läuft ausschließlich mit Standardeinstellungen.}
+    \caption{Hyperparameter-Suchräume (\texttt{GridSearchCV}) für die Klassifikatoren. Naive Bayes wird ohne Grid für die finale Modellauswahl verwendet (siehe Abschnitt~3.2); die Naive-Bayes-Implementierung (\texttt{BernoulliNB}) läuft ausschließlich mit Standardeinstellungen.}
     \label{tab:hyperparameters}
     \begin{tabular}{|l|l|l|}
         \hline
@@ -370,14 +426,14 @@ F.~Pedregosa et al.
 \centering
 \footnotesize
 \setlength{\tabcolsep}{4pt}
-\caption{Logistic Regression: Ergebnisse je Datensatz. CV-AUC/CV-F1 = 5-fold-CV-Mittelwert ($\pm$\,Std.) ohne Hyperparameter-Suche (Standardeinstellungen); Test-Werte auf separatem Hold-out-Testset.}\label{tab:logreg-results}
-\begin{tabular}{lccccc}
+\caption{Logistic Regression: Ergebnisse je Datensatz. $C$ aus Grid-Search; CV-AUC = 5-fold-CV-Mittelwert ($\pm$\,Std.); Test-Werte auf separatem Hold-out-Testset; F1/P/R für Zielklasse.}\label{tab:logreg-results}
+\begin{tabular}{lcccccc}
 \toprule
-Datensatz & CV-AUC & Test-AUC & CV-F1 & Test-F1 & Test-Acc. \\
+Datensatz & $C$ & CV-AUC & Test-AUC & F1 & Prec. & Recall \\
 \midrule
-Telco & $0{,}846 \pm 0{,}013$ & 0{,}842 & $0{,}592 \pm 0{,}030$ & 0{,}604 & 80{,}55\,\% \\
-Bank  & $0{,}928 \pm 0{,}018$ & 0{,}912 & $0{,}475 \pm 0{,}028$ & 0{,}629 & 87{,}76\,\% \\
-Ecom  & $0{,}890 \pm 0{,}014$ & 0{,}902 & $0{,}497 \pm 0{,}027$ & 0{,}541 & 88{,}94\,\% \\
+Telco & 10 & $0{,}841 \pm 0{,}012$ & 0{,}862 & 0{,}634 & 0{,}682 & 0{,}593 \\
+Bank  & 1  & $0{,}936 \pm 0{,}002$ & 0{,}931 & 0{,}498 & 0{,}651 & 0{,}404 \\
+Ecom  & 10 & $0{,}893 \pm 0{,}011$ & 0{,}895 & 0{,}507 & 0{,}758 & 0{,}381 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -402,14 +458,14 @@ Ecom    & 31 & $0{,}889 \pm 0{,}013$ & 0{,}890 & 0{,}62 & 0{,}71 & 0{,}55 \\
 \centering
 \footnotesize
 \setlength{\tabcolsep}{4pt}
-\caption{Naive Bayes (BernoulliNB): Ergebnisse je Datensatz. CV-AUC/CV-F1 = 5-fold-CV-Mittelwert ($\pm$\,Std.), keine Hyperparameter-Suche; Test-Werte auf separatem Hold-out-Testset.}\label{tab:nb-results}
+\caption{Naive Bayes (BernoulliNB): Ergebnisse je Datensatz. CV-AUC = 5-fold-CV-Mittelwert ($\pm$\,Std.), keine Hyperparameter-Suche; Test-Werte auf separatem Hold-out-Testset; F1/P/R für Zielklasse.}\label{tab:nb-results}
 \begin{tabular}{lccccc}
 \toprule
-Datensatz & CV-AUC & Test-AUC & CV-F1 & Test-F1 & Test-Acc. \\
+Datensatz & CV-AUC & Test-AUC & F1 & Prec. & Recall \\
 \midrule
-Telco & $0{,}821 \pm 0{,}012$ & 0{,}808 & $0{,}597 \pm 0{,}010$ & 0{,}593 & 69{,}55\,\% \\
-Bank  & $0{,}819 \pm 0{,}047$ & 0{,}838 & $0{,}350 \pm 0{,}079$ & 0{,}538 & 81{,}99\,\% \\
-Ecom  & $0{,}812 \pm 0{,}009$ & 0{,}830 & $0{,}484 \pm 0{,}018$ & 0{,}508 & 80{,}25\,\% \\
+Telco & $0{,}810 \pm 0{,}023$ & 0{,}792 & 0{,}584 & 0{,}466 & 0{,}783 \\
+Bank  & $0{,}762 \pm 0{,}004$ & 0{,}769 & 0{,}398 & 0{,}460 & 0{,}351 \\
+Ecom  & $0{,}877 \pm 0{,}005$ & 0{,}881 & 0{,}576 & 0{,}547 & 0{,}607 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -418,14 +474,14 @@ Ecom  & $0{,}812 \pm 0{,}009$ & 0{,}830 & $0{,}484 \pm 0{,}018$ & 0{,}508 & 80{,
 \centering
 \footnotesize
 \setlength{\tabcolsep}{4pt}
-\caption{Support Vector Machine (RBF-Kernel): Ergebnisse je Datensatz. CV-Acc. = 5-fold-CV-Mittelwert (Accuracy-Scoring) des inneren Grid-Search über $C$; F1/P/R für Zielklasse.}\label{tab:svm-results}
+\caption{Support Vector Machine (RBF-Kernel): Ergebnisse je Datensatz. CV-AUC = 5-fold-CV-Mittelwert ($\pm$\,Std.) des inneren Grid-Search über $C$; F1/P/R für Zielklasse.}\label{tab:svm-results}
 \begin{tabular}{lcccccc}
 \toprule
-Datensatz & $C$ & CV-Acc. & Test-AUC & F1 & Prec. & Recall \\
+Datensatz & $C$ & CV-AUC & Test-AUC & F1 & Prec. & Recall \\
 \midrule
-Telco & 1  & 0{,}804 & 0{,}796 & 0{,}56 & 0{,}64 & 0{,}49 \\
-Bank  & 1  & 0{,}906 & 0{,}932 & 0{,}48 & 0{,}66 & 0{,}38 \\
-Ecom  & 10 & 0{,}891 & 0{,}859 & 0{,}60 & 0{,}69 & 0{,}53 \\
+Telco & 1  & $0{,}806 \pm 0{,}014$ & 0{,}796 & 0{,}56 & 0{,}64 & 0{,}49 \\
+Bank  & 1  & $0{,}927 \pm 0{,}003$ & 0{,}932 & 0{,}48 & 0{,}66 & 0{,}38 \\
+Ecom  & 10 & $0{,}861 \pm 0{,}013$ & 0{,}859 & 0{,}60 & 0{,}69 & 0{,}53 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -466,14 +522,14 @@ Ecom  & 20\,/\,log2\,/\,200    & $0{,}927 \pm 0{,}006$ & 0{,}924 & 0{,}63 & 0{,}
 \centering
 \footnotesize
 \setlength{\tabcolsep}{4pt}
-\caption{Gradient-Boosting-Ergebnisse je Datensatz (nested CV und Hold-out-Test). Beste Lernrate / Tiefe / Iterationen: Telco 0,01\,/\,5\,/\,300; Bank 0,05\,/\,unbegrenzt\,/\,100; E-Commerce 0,01\,/\,unbegrenzt\,/\,300.}\label{tab:gb-results}
+\caption{Gradient-Boosting-Ergebnisse je Datensatz (nested CV und Hold-out-Test). Beste Lernrate / Tiefe / Iterationen: Telco 0,01\,/\,5\,/\,200; Bank 0,05\,/\,15\,/\,100; E-Commerce 0,01\,/\,15\,/\,300.}\label{tab:gb-results}
 \begin{tabular}{lcccc}
 \toprule
 Datensatz & Split & Nested-CV ROC-AUC & Test ROC-AUC & Test F1 \\
 \midrule
-Telco & random   & $0.848 \pm 0.010$ & 0.845 & 0.581 \\
-Bank  & temporal & $0.945 \pm 0.014$ & 0.914 & 0.621 \\
-Ecom  & random   & $0.932 \pm 0.005$ & 0.935 & 0.658 \\
+Telco & random   & $0.848 \pm 0.010$ & 0.844 & 0.555 \\
+Bank  & temporal & $0.948 \pm 0.011$ & 0.909 & 0.614 \\
+Ecom  & random   & $0.932 \pm 0.005$ & 0.935 & 0.667 \\
 \bottomrule
 \end{tabular}
 \end{table}
