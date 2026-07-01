@@ -7,6 +7,7 @@
 \usepackage{microtype}
 \usepackage{booktabs}
 \usepackage{multirow}
+\usepackage{float}
 %\usepackage{refcheck}
 \usepackage[colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue]{hyperref}
 \setkomafont{author}{\small}
@@ -199,23 +200,6 @@ Gradient Boosting   & 0.848 & 0.945 & 0.932 \\
 \end{tabular}
 \end{table}
 
-\begin{table}[ht]
-\centering
-\small
-\caption{Gradient-Boosting-Ergebnisse je Datensatz (nested CV und Hold-out-Test).
-Beste Lernrate / Tiefe / Iterationen: Telco 0,01\,/\,5\,/\,300; Bank 0,05\,/\,unbegrenzt\,/\,100; E-Commerce 0,01\,/\,unbegrenzt\,/\,300.}
-\label{tab:gb-results}
-\begin{tabular}{lcccc}
-\toprule
-Datensatz & Split & Nested-CV ROC-AUC & Test ROC-AUC & Test F1 \\
-\midrule
-Telco & random   & $0.848 \pm 0.010$ & 0.845 & 0.581 \\
-Bank  & temporal & $0.945 \pm 0.014$ & 0.914 & 0.621 \\
-Ecom  & random   & $0.932 \pm 0.005$ & 0.935 & 0.658 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
 \paragraph{Detaillierte Analyse des besten Modells (Random Forest / Bank Marketing)}
 \label{sec:detailed-analysis}
 
@@ -361,7 +345,7 @@ F.~Pedregosa et al.
 
 \subsection{Hyperparameter-Suchräume}
 
-\begin{table}[htbp]
+\begin{table}[H]
     \centering
     \footnotesize
     \caption{Hyperparameter-Suchräume (\texttt{GridSearchCV}) für die Klassifikatoren. Logistic Regression und Naive Bayes werden ohne Grid für die finale Modellauswahl verwendet (siehe Abschnitt~3.2); die Naive-Bayes-Implementierung (\texttt{BernoulliNB}) läuft ausschließlich mit Standardeinstellungen.}
@@ -400,9 +384,25 @@ F.~Pedregosa et al.
     \end{tabular}
 \end{table}
 
-\subsection{Detaillierte Ergebnistabellen: k-Nearest Neighbors, MLP und Random Forest}
+\subsection{Detaillierte Ergebnistabellen: alle Klassifikatoren}
 
-\begin{table}[htbp]
+\begin{table}[H]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Logistic Regression: Ergebnisse je Datensatz. CV-AUC/CV-F1 = 5-fold-CV-Mittelwert ($\pm$\,Std.) ohne Hyperparameter-Suche (Standardeinstellungen); Test-Werte auf separatem Hold-out-Testset.}\label{tab:logreg-results}
+\begin{tabular}{lccccc}
+\toprule
+Datensatz & CV-AUC & Test-AUC & CV-F1 & Test-F1 & Test-Acc. \\
+\midrule
+Telco & $0{,}846 \pm 0{,}013$ & 0{,}842 & $0{,}592 \pm 0{,}030$ & 0{,}604 & 80{,}55\,\% \\
+Bank  & $0{,}928 \pm 0{,}018$ & 0{,}912 & $0{,}475 \pm 0{,}028$ & 0{,}629 & 87{,}76\,\% \\
+Ecom  & $0{,}890 \pm 0{,}014$ & 0{,}902 & $0{,}497 \pm 0{,}027$ & 0{,}541 & 88{,}94\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
 \centering
 \footnotesize
 \setlength{\tabcolsep}{4pt}
@@ -418,7 +418,39 @@ Ecom    & 31 & $0{,}889 \pm 0{,}013$ & 0{,}890 & 0{,}62 & 0{,}71 & 0{,}55 \\
 \end{tabular}
 \end{table}
 
-\begin{table}[htbp]
+\begin{table}[H]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Naive Bayes (BernoulliNB): Ergebnisse je Datensatz. CV-AUC/CV-F1 = 5-fold-CV-Mittelwert ($\pm$\,Std.), keine Hyperparameter-Suche; Test-Werte auf separatem Hold-out-Testset.}\label{tab:nb-results}
+\begin{tabular}{lccccc}
+\toprule
+Datensatz & CV-AUC & Test-AUC & CV-F1 & Test-F1 & Test-Acc. \\
+\midrule
+Telco & $0{,}821 \pm 0{,}012$ & 0{,}808 & $0{,}597 \pm 0{,}010$ & 0{,}593 & 69{,}55\,\% \\
+Bank  & $0{,}819 \pm 0{,}047$ & 0{,}838 & $0{,}350 \pm 0{,}079$ & 0{,}538 & 81{,}99\,\% \\
+Ecom  & $0{,}812 \pm 0{,}009$ & 0{,}830 & $0{,}484 \pm 0{,}018$ & 0{,}508 & 80{,}25\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Support Vector Machine (RBF-Kernel): Ergebnisse je Datensatz. CV-Acc. = 5-fold-CV-Mittelwert (Accuracy-Scoring) des inneren Grid-Search über $C$; F1/P/R für Zielklasse.}\label{tab:svm-results}
+\begin{tabular}{lcccccc}
+\toprule
+Datensatz & $C$ & CV-Acc. & Test-AUC & F1 & Prec. & Recall \\
+\midrule
+Telco & 1  & 0{,}804 & 0{,}796 & 0{,}56 & 0{,}64 & 0{,}49 \\
+Bank  & 1  & 0{,}906 & 0{,}932 & 0{,}48 & 0{,}66 & 0{,}38 \\
+Ecom  & 10 & 0{,}891 & 0{,}859 & 0{,}60 & 0{,}69 & 0{,}53 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
 \centering
 \footnotesize
 \setlength{\tabcolsep}{4pt}
@@ -434,7 +466,7 @@ Ecom  & $(128,64),\ 0{,}01$ & $0{,}910 \pm 0{,}008$ & 0{,}916 & 0{,}63 & 0{,}71 
 \end{tabular}
 \end{table}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \footnotesize
 \setlength{\tabcolsep}{4pt}
@@ -446,6 +478,22 @@ Datensatz & Konfiguration & CV-AUC & Test-AUC & F1 & Prec. & Recall \\
 Telco & 10\,/\,sqrt\,/\,100    & $0{,}845 \pm 0{,}010$ & 0{,}838 & 0{,}63 & 0{,}55 & 0{,}73 \\
 Bank  & $\infty$\,/\,sqrt\,/\,200 & $0{,}945 \pm 0{,}004$ & 0{,}943 & 0{,}51 & 0{,}65 & 0{,}43 \\
 Ecom  & 20\,/\,log2\,/\,200    & $0{,}927 \pm 0{,}006$ & 0{,}924 & 0{,}63 & 0{,}71 & 0{,}56 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Gradient-Boosting-Ergebnisse je Datensatz (nested CV und Hold-out-Test). Beste Lernrate / Tiefe / Iterationen: Telco 0,01\,/\,5\,/\,300; Bank 0,05\,/\,unbegrenzt\,/\,100; E-Commerce 0,01\,/\,unbegrenzt\,/\,300.}\label{tab:gb-results}
+\begin{tabular}{lcccc}
+\toprule
+Datensatz & Split & Nested-CV ROC-AUC & Test ROC-AUC & Test F1 \\
+\midrule
+Telco & random   & $0.848 \pm 0.010$ & 0.845 & 0.581 \\
+Bank  & temporal & $0.945 \pm 0.014$ & 0.914 & 0.621 \\
+Ecom  & random   & $0.932 \pm 0.005$ & 0.935 & 0.658 \\
 \bottomrule
 \end{tabular}
 \end{table}
