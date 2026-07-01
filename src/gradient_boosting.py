@@ -24,7 +24,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import (
     StratifiedKFold, TimeSeriesSplit, GridSearchCV, cross_val_score, train_test_split
 )
-from sklearn.metrics import f1_score, roc_auc_score
+from sklearn.metrics import f1_score, roc_auc_score, precision_score, recall_score
 
 SRC_DIR = Path(__file__).parent
 PROJECT_ROOT = SRC_DIR.parent
@@ -167,8 +167,11 @@ def evaluate_gb_dataset(dataset_config, eda_summary, split_mode):
 
     test_f1 = float(f1_score(y_test, y_pred))
     test_roc_auc = float(roc_auc_score(y_test, y_proba))
+    test_precision = float(precision_score(y_test, y_pred))
+    test_recall = float(recall_score(y_test, y_pred))
     logger.info(
-        f"{dataset_name}: Test F1={test_f1:.4f}  ROC-AUC={test_roc_auc:.4f}"
+        f"{dataset_name}: Test F1={test_f1:.4f}  ROC-AUC={test_roc_auc:.4f}  "
+        f"Precision={test_precision:.4f}  Recall={test_recall:.4f}"
     )
 
     return {
@@ -179,6 +182,8 @@ def evaluate_gb_dataset(dataset_config, eda_summary, split_mode):
         "nested_cv_fold_scores": [round(s, 4) for s in nested_scores.tolist()],
         "test_f1": test_f1,
         "test_roc_auc": test_roc_auc,
+        "test_precision": test_precision,
+        "test_recall": test_recall,
         "best_params": best_params,
     }
 
@@ -209,6 +214,8 @@ def main():
             "Nested CV ROC-AUC (std)": round(r["nested_cv_roc_auc_std"], 4),
             "Test F1": round(r["test_f1"], 4),
             "Test ROC-AUC": round(r["test_roc_auc"], 4),
+            "Test Precision": round(r["test_precision"], 4),
+            "Test Recall": round(r["test_recall"], 4),
             "Best Params": str(r["best_params"]),
         })
 
