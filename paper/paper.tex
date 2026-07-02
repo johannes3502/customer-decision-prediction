@@ -149,6 +149,8 @@ Die beiden verbleibenden Modelle gehören zur Familie der baumbasierten Ensemble
 
 \textbf{Gradient Boosting} konstruiert ein additives Ensemble flacher Entscheidungsbäume, die, anders als beim Bagging des Random Forest, sequentiell trainiert werden: Jeder neue Baum approximiert den negativen Gradienten der Verlustfunktion und korrigiert so die Fehler des bisherigen Modells \cite{Friedman2001}. Es ist enthalten, weil dieser fehlerkorrigierende Mechanismus primär den Bias statt der Varianz reduziert und damit eine komplementäre Ensemble-Strategie zum Random Forest darstellt. Optimiert wurden die Lernrate ($\{0{,}01,\, 0{,}05,\, 0{,}1\}$), die Anzahl der Boosting-Iterationen ($\{100, 200, 300\}$) und die maximale Baumtiefe ($\{5, 10, 15,\,$unbegrenzt$\}$), wobei Lernrate und Iterationszahl den zentralen Regularisierungs-Kompromiss bilden.
 
+\begin{flushright}\textit{Autor: Quirin Lex}\end{flushright}
+
 \textbf{Random Forest}, das im Experimentteil beste Modell, erweitert die Idee des Bagging von Entscheidungsbäumen um eine zusätzliche Zufallskomponente \cite{Breiman2001}: Jeder Baum wird auf einer Bootstrap-Stichprobe der Trainingsdaten trainiert, und an jedem Split wird nur eine zufällige Teilmenge der Merkmale betrachtet, wodurch die einzelnen Bäume dekorreliert werden. Die Mittelung vieler solcher dekorrelierter Bäume reduziert die Varianz des Ensembles deutlich, ohne den Bias der einzelnen Bäume wesentlich zu erhöhen, was den zentralen Vorteil gegenüber einem einzelnen, leicht überangepassten Entscheidungsbaum ausmacht. Die finale Vorhersage ergibt sich aus dem Mehrheitsvotum bzw. der gemittelten Klassenwahrscheinlichkeit über alle Bäume; eine klassenweise Gewichtung, die die seltenere Klasse stärker gewichtet, wirkt zusätzlich dem Klassenungleichgewicht in allen drei Datensätzen entgegen. Optimiert wurden die Anzahl der Bäume ($\{100, 200\}$), die maximale Baumtiefe ($\{10, 20,\,$unbegrenzt$\}$) und die Anzahl der pro Split betrachteten Merkmale (Quadratwurzel bzw. binärer Logarithmus der Gesamtzahl).
 
 \begin{flushright}\textit{Autor: Xuan Truong Nguyen}\end{flushright}
@@ -208,6 +210,8 @@ Die Experimente werden in Python unter Verwendung von scikit-learn \cite{Pedrego
 
 Tabelle~\ref{tab:overall} fasst die ROC-AUC-Werte aller sieben Klassifikatoren zusammen. Auf allen drei Datensätzen übertreffen die fortgeschrittenen Modelle die Baselines deutlich, wobei die Rangfolge innerhalb beider Gruppen je nach Datensatz leicht variiert. Die Unterschiede zwischen den Datensätzen selbst sind erheblich: Während auf Bank Marketing Werte über 0,93 erreichbar sind, liegt das gesamte Leistungsspektrum auf Telco zwischen 0,76 und 0,85, was die höhere Schwierigkeit dieses Datensatzes widerspiegelt. Eine ergänzende, ausschließlich auf Test-Set-Werten basierende Gesamtübersicht aller sieben Klassifikatoren --- ohne die in Tabelle~\ref{tab:overall} teils vermischten CV- und Hold-out-Werte --- zeigt Abbildung~\ref{fig:overall-testauc} im Anhang; die dortige Rangfolge (Random Forest vor MLP, SVM, Logistic Regression und Gradient Boosting) bestätigt die hier berichteten Ergebnisse.
 
+\begin{flushright}\textit{Autor: Quirin Lex}\end{flushright}
+
 Unter den Baseline-Verfahren zeigt k-Nearest Neighbors die größte Variabilität zwischen den Datensätzen (ROC-AUC 0{,}760--0{,}890; detaillierte Metriken in Tab.~\ref{tab:knn-results}), was auf die Sensitivität des distanzbasierten Verfahrens gegenüber der dimensionalen Merkmalsstruktur zurückzuführen ist.
 
 Die Logistic Regression ist nicht nur die stärkste Baseline, sondern bleibt auch gegenüber den fortgeschrittenen Modellen bemerkenswert konkurrenzfähig: Auf Bank Marketing erreicht sie eine Test-ROC-AUC von 0{,}931 (detaillierte Metriken in Tab.~\ref{tab:logreg-results}) und liegt damit nahezu gleichauf mit SVM (0{,}932) und MLP (0{,}941). Dass ein rein lineares Modell hier so gut abschneidet, deutet darauf hin, dass die entscheidenden Merkmale wie Gesprächsdauer und makroökonomische Indikatoren weitgehend monoton mit der Abschlusswahrscheinlichkeit zusammenhängen.
@@ -218,11 +222,19 @@ Im direkten Vergleich der drei Baseline-Verfahren erweist sich die Logistic Regr
 
 Die Support Vector Machine erreicht ihre stärkste Leistung auf Bank Marketing (ROC-AUC 0{,}932; detaillierte Metriken in Tab.~\ref{tab:svm-results}) und liegt dort nahezu gleichauf mit dem MLP und den Ensemble-Methoden, fällt auf Telco mit 0{,}796 jedoch hinter alle übrigen fortgeschrittenen Modelle und sogar hinter die lineare Logistic-Regression-Baseline zurück. Auf Ecom ordnet sie sich mit 0{,}859 im Mittelfeld ein, wobei der optimale Regularisierungsparameter datensatzabhängig variiert ($C=1$ für Telco und Bank, $C=10$ für Ecom). Da nur $C$ optimiert wurde, profitiert das Verfahren vor allem vom großen Bank-Datensatz mit klar trennender Gesprächsdauer, während es an den stark überlappenden Klassen auf Telco scheitert.
 
+\begin{flushright}\textit{Autor: Florian Koo}\end{flushright}
+
 Das Multi-Layer Perceptron konkurriert auf Bank Marketing mit den Ensemble-Methoden (ROC-AUC 0{,}941 vs.\ 0{,}943--0{,}948; detaillierte Metriken in Tab.~\ref{tab:mlp-results}) und übertrifft den Random Forest auf Telco leicht (0{,}844 vs.\ 0{,}838), bleibt auf Ecom jedoch knapp zurück (0{,}916 vs.\ 0{,}924). Die variable Architekturwahl der Kreuzvalidierung spiegelt die unterschiedlichen Datensatzgrößen und Feature-Interaktionen wider.
+
+\begin{flushright}\textit{Autor: Xuan Truong Nguyen}\end{flushright}
 
 Gradient Boosting zählt über alle drei Datensätze zu den leistungsstärksten Verfahren und erzielt auf Telco (ROC-AUC 0{,}848) sowie Ecom (0{,}935) die jeweils höchsten Werte des gesamten Vergleichs (detaillierte Metriken in Tab.~\ref{tab:gb-results}). Auf Bank Marketing erreicht es zwar die höchste geschachtelte CV-ROC-AUC (0{,}948), fällt auf dem zeitlich abgetrennten Testset jedoch auf 0{,}909 zurück, was auf die Empfindlichkeit gegenüber der zeitlichen Verschiebung der makroökonomischen Indikatoren hindeutet.
 
+\begin{flushright}\textit{Autor: Quirin Lex}\end{flushright}
+
 Random Forest erzielt auf Bank Marketing die höchste Test-ROC-AUC aller sieben Klassifikatoren (0,943) und zeigt über alle drei Datensätze eine konsistent starke Leistung (detaillierte Metriken in Tab.~\ref{tab:rf-results}). Als bestes Modell des Vergleichs wird es im folgenden Abschnitt vertieft analysiert.
+
+\begin{flushright}\textit{Autor: Xuan Truong Nguyen}\end{flushright}
 
 \begin{table}[ht]
 \centering
@@ -247,7 +259,7 @@ Gradient Boosting   & 0.848 & 0.948 & 0.932 \\
 \paragraph{Detaillierte Analyse des besten Modells (Random Forest / Bank Marketing)}
 \label{sec:detailed-analysis}
 
-Das beste Modell (Random Forest auf Bank Marketing, ROC-AUC 0{,}943) wird vertieft auf Merkmalswichtigkeit, Generalisierungsverhalten und Fehlermuster untersucht.
+Das beste Modell (Random Forest auf Bank Marketing) wird vertieft auf Merkmalswichtigkeit, Generalisierungsverhalten und Fehlermuster untersucht.
 
 \paragraph{Modellleistung und Permutation Importance}
 
@@ -287,12 +299,9 @@ Schließlich unterstreicht die Gesprächsdauer als stärkster Prädiktor eine gr
 
 \section{Fazit}
 
-\textbf{Gliederung (1--2 Absätze, keine neuen Ergebnisse):}
-\begin{itemize}
-	\item Zusammenfassung: Random Forest erzielt über alle verglichenen Modelle und Datensätze hinweg die beste Generalisierungsleistung (Bank Marketing, ROC-AUC $\approx$0.94); Logistic Regression als stärkste Baseline; Klassenungleichgewicht und Feature-Korrelationen als durchgängige Herausforderungen.
-	\item Limitationen kurz wiederholen (Overfitting/Bias-Variance-Gap, eingeschränkter Analyseumfang auf einen Datensatz, fehlende Exploration von Resampling-/Cost-Sensitive-Verfahren).
-	\item Offene Fragen/Ausblick: Modellanalyse auf Telco/Ecom ausweiten, Threshold-/Cost-Sensitive-Tuning für Geschäftsszenarien, Untersuchung weiterer Hyperparameter, Robustheit gegenüber Concept Drift (Bank-Datensatz) genauer untersuchen.
-\end{itemize}
+Diese Arbeit hat sieben Klassifikatoren unter einer einheitlichen, leak-freien Pipeline über drei Datensätze zur Vorhersage von Kundenentscheidungen verglichen und das beste Modell vertieft analysiert. Über alle Datensätze hinweg erzielen die baumbasierten Ensembles die beste Generalisierungsleistung; Random Forest erreicht auf Bank Marketing das beste Ergebnis des Vergleichs (Test-ROC-AUC rund 0{,}94), dicht gefolgt von Gradient Boosting und dem Multi-Layer Perceptron. Die Logistische Regression erweist sich als überraschend starke Baseline, die den aufwändigeren Verfahren nur wenig nachsteht, während die Support Vector Machine über die Datensätze hinweg am schwächsten abschneidet. Als durchgängige Herausforderungen erwiesen sich das Klassenungleichgewicht, das F1-Score und ROC-AUC gegenüber der Accuracy als aussagekräftigere Metriken erfordert, sowie starke Merkmalskorrelationen, welche die Interpretierbarkeit der Feature-Importance-Maße einschränken.
+
+Die Arbeit unterliegt mehreren Einschränkungen. Die vertiefte Modellanalyse beschränkt sich auf eine einzige Datensatz-Modell-Kombination, und trotz Klassengewichtung bleibt eine deutliche Bias-Variance-Lücke bestehen; Resampling-Verfahren und eine systematische Schwellenwert-Optimierung wurden nicht erprobt. Zudem ist mit der Gesprächsdauer das dominierende Merkmal des Bank-Datensatzes erst nach dem Kundenkontakt verfügbar, was die praktische Einsetzbarkeit für ein prospektives Targeting begrenzt. Künftige Arbeiten könnten die vertiefte Analyse auf die Datensätze Telco und Online Shoppers ausweiten, eine kosten-sensitive Schwellenwert-Anpassung an konkrete Geschäftsszenarien untersuchen und die Robustheit der Modelle gegenüber Concept Drift im zeitlich geordneten Bank-Datensatz genauer prüfen.
 
 \addcontentsline{toc}{section}{Literaturverzeichnis}
 \begin{thebibliography}{}
