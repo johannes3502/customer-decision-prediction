@@ -1,0 +1,107 @@
+\documentclass[11pt]{scrartcl}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[ngerman]{babel}
+\usepackage{booktabs}
+\usepackage[colorlinks=true, linkcolor=blue, urlcolor=blue]{hyperref}
+
+% Platzhalter fuer noch handisch zu ergaenzende Namen/Inhalte
+\newcommand{\todo}[1]{\textbf{[zu ergänzen: #1]}}
+% Zuweisung: Teil links, verantwortliche Person rechts
+\newcommand{\by}[1]{\hfill\textit{#1}}
+
+\begin{document}
+
+\title{Beiträge der Teammitglieder}
+\subtitle{Projekt: Vorhersage von Kundenentscheidungen --- Vergleich von sieben
+Klassifikatoren auf drei tabellarischen Datensätzen}
+\author{
+	Quirin Lex (xxx) \and
+	Xuan Truong Nguyen (xxx) \and
+	Johannes Ramser (xxx) \and
+	Florian Koo (xxx)
+}
+\date{\today}
+\maketitle
+
+\noindent
+Dieses Dokument geht die einzelnen Projektbestandteile durch und weist jedem Teil die
+verantwortliche Person zu (rechts kursiv). Die Zuordnung der Paper-Abschnitte beruht auf
+den Autoren-Markierungen in \texttt{paper.tex}; die Zuordnung der Notebooks ist ein
+vorläufiger Vorschlag und noch zu prüfen. Mit \todo{\dots} markierte Stellen sind
+händisch zu vervollständigen.
+
+\section{Notebooks \& Preprocessing}
+\emph{(vorläufige Zuordnung -- bitte prüfen)}
+\begin{itemize}
+	\item Preprocessing-Pipeline (Datenbereinigung, Imputation, leak-freie Transformation) \by{Johannes Ramser}
+	\item \texttt{logreg\_analysis.ipynb} (Logistic Regression) \by{Quirin Lex}
+	\item \texttt{knn\_analysis.ipynb} (k-Nearest Neighbors) \by{Xuan Truong Nguyen}
+	\item \texttt{bayesfin.ipynb} (Naive Bayes) \by{Florian Koo}
+	\item \texttt{baseclassifier\_comp.ipynb} (Baseline-Vergleich) \by{Florian Koo}
+	\item \texttt{subvectormachine.ipynb} (Support Vector Machine) \by{Florian Koo}
+	\item \texttt{mlp\_analysis.ipynb} (Multi-Layer Perceptron) \by{Xuan Truong Nguyen}
+	\item \texttt{rf\_analysis.ipynb} (Random Forest) \by{Xuan Truong Nguyen}
+	\item \texttt{gradient\_boosting\_analysis.ipynb} (Gradient Boosting) \by{Quirin Lex}
+	\item \texttt{model\_analysis.ipynb} (Detailanalyse des besten Modells) \by{Johannes Ramser}
+	\item \texttt{Vergleich.ipynb} (Gesamtvergleich aller Modelle) \by{Quirin Lex}
+\end{itemize}
+
+\section{Paper}
+
+\subsection*{Abstract und Einleitung}
+\begin{itemize}
+	\item Abstract \by{Xuan Truong Nguyen}
+	\item Einleitung \by{Xuan Truong Nguyen}
+\end{itemize}
+
+\subsection*{2 Verwandte Arbeiten}
+\begin{itemize}
+	\item Stand der Forschung; Abgrenzung und Beitrag (inkl.\ Literaturrecherche) \by{Florian Koo}
+\end{itemize}
+
+\subsection*{3 Methoden}
+\begin{itemize}
+	\item 3.1 Datenvorverarbeitung \by{Johannes Ramser}
+	\item 3.2 Baseline-Klassifikatoren (Task 2: LogReg, Naive Bayes, k-NN) \by{Xuan Truong Nguyen}
+	\item 3.3 Fortgeschrittene Modelle (Task 3: SVM, MLP, Random Forest) \by{Xuan Truong Nguyen}
+	\item 3.3 Fortgeschrittene Modelle -- Gradient Boosting \by{Quirin Lex}
+	\item 3.4 Modellauswahl und -bewertung \by{Johannes Ramser}
+	\item 3.5 Modellanalyse-Framework \by{Johannes Ramser}
+\end{itemize}
+
+\subsection*{4 Experimente}
+\begin{itemize}
+	\item 4.1 Daten \by{Johannes Ramser}
+	\item 4.2 Versuchsaufbau \by{Johannes Ramser}
+\end{itemize}
+
+\paragraph{4.3 Ergebnisse und Diskussion}
+\begin{itemize}
+	\item Ergebnisübersicht und Gesamtrangfolge \by{Quirin Lex}
+	\item Baseline-Diskussion (Logistic Regression, Naive Bayes) und SVM \by{Florian Koo}
+	\item Multi-Layer Perceptron und k-NN \by{Xuan Truong Nguyen}
+	\item Gradient Boosting \by{Quirin Lex}
+	\item Random Forest \by{Xuan Truong Nguyen}
+	\item Detailanalyse des besten Modells (Permutation Importance, SHAP, Lernkurven, Fehleranalyse) \by{Johannes Ramser}
+	\item Limitationen und Breitere Implikationen \by{Johannes Ramser}
+\end{itemize}
+
+\subsection*{5 Fazit}
+\begin{itemize}
+	\item Fazit \by{Quirin Lex}
+\end{itemize}
+
+\subsection*{Anhang}
+\begin{itemize}
+	\item A.1 Hyperparameter-Suchräume \by{Xuan Truong Nguyen}
+	\item A.2 Detaillierte Ergebnistabellen \by{Xuan Truong Nguyen, Florian Koo}
+	\item A.3 Vergleichsdiagramme \by{Xuan Truong Nguyen}
+\end{itemize}
+
+\bigskip
+\noindent
+\emph{Hinweis:} Die Zuordnung der schriftlichen Beiträge ist vor der Abgabe von allen
+Teammitgliedern zu prüfen.
+
+\end{document}
