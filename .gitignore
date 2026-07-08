@@ -223,12 +223,7 @@ __marimo__/
 # Kilo
 .kilo/
 
-# Internal audit / cleanup checklists
-.audit/
-
-vorlesung
-
-# LaTeX build artifacts
+# Paper LaTeX source and build artifacts
 paper/*.aux
 paper/*.fdb_latexmk
 paper/*.fls
@@ -240,7 +235,15 @@ paper/*.bbl
 paper/*.blg
 paper/*.bcf
 paper/*.run.xml
+paper/*.tex
+paper/main.pdf
+paper/project.pdf
 
-# Personal task notes
-paper/JOHANNES_AUFGABEN.md
-paper/RESEARCH_PROMPT.md
+# macOS
+.DS_Store
+
+# Generated reports (optional — uncomment to ignore)
+# reports/plots/
+# reports/results/
+# reports/eda_report.txt
+# reports/summary_*.json

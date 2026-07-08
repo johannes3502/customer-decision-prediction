@@ -1,0 +1,40 @@
+# Dataset configuration for customer-decision-prediction
+datasets:
+  telco:
+    name: telco
+    source: "https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Telco-Customer-Churn.csv"
+    file: data/raw/telco.csv
+    sep: ","
+    target: Churn
+    id_col: customerID
+    split_mode: random
+    target_map:
+      "Yes": 1
+      "No": 0
+
+  bank:
+    name: bank
+    source: "https://archive.ics.uci.edu/ml/machine-learning-databases/00222/bank-additional.zip"
+    file: data/raw/bank.csv
+    sep: ";"
+    target: "y"
+    id_col: null
+    split_mode: temporal
+    time_cols: [month, day_of_week]
+    replace_999_cols: [pdays]
+    target_map:
+      "yes": 1
+      "no": 0
+
+  ecom:
+    name: ecom
+    source: "https://archive.ics.uci.edu/ml/machine-learning-databases/00468/online_shoppers_intention.csv"
+    file: data/raw/ecom.csv
+    sep: ","
+    target: Revenue
+    id_col: null
+    split_mode: random
+    replace_999_cols: [ProductRelated_Duration]
+    target_map:
+      "True": 1
+      "False": 0

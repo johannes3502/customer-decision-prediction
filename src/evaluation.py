@@ -104,11 +104,9 @@ def sort_dataframe_temporally(df: pd.DataFrame) -> pd.DataFrame:
                    'jul':7, 'aug':8, 'sep':9, 'oct':10, 'nov':11, 'dec':12}
     day_order = {'mon':1, 'tue':2, 'wed':3, 'thu':4, 'fri':5}
     
-    # Konvertiere Strings in Kleinbuchstaben und mappe auf Zahlen
     month_num = df['month'].str.lower().map(month_order)
     day_num = df['day_of_week'].str.lower().map(day_order)
     
-    # Kombinierten Sortierschlüssel bilden (Monat * 100 + Tag)
     df['_time_idx'] = month_num * 100 + day_num
     df = df.sort_values('_time_idx').reset_index(drop=True)
     df.drop(columns=['_time_idx'], inplace=True)
@@ -506,7 +504,7 @@ def compile_results(all_results: dict):
     
     df_cv = pd.DataFrame(cv_data)
     cv_path = PROJECT_ROOT / 'reports' / 'results' / 'baseline_cv_results.csv'
-    cv_path.parent.mkdir(parents=True, exist_ok=True)   # <-- diese Zeile neu
+    cv_path.parent.mkdir(parents=True, exist_ok=True)
     df_cv.to_csv(cv_path, index=False)
     logger.info(f"\nCross-validation results saved to {cv_path}")
     print("\n" + "="*90)
@@ -534,7 +532,7 @@ def compile_results(all_results: dict):
     
     df_test = pd.DataFrame(test_data)
     test_path = PROJECT_ROOT / 'reports' / 'results' / 'baseline_test_results.csv'
-    test_path.parent.mkdir(parents=True, exist_ok=True)   # <-- diese Zeile neu
+    test_path.parent.mkdir(parents=True, exist_ok=True)
     df_test.to_csv(test_path, index=False)
     logger.info(f"Test set results saved to {test_path}")
     print("\n" + "="*90)
